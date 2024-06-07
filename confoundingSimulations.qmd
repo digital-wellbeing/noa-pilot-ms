@@ -1,0 +1,82 @@
+---
+title: Confounding Simulations
+output: html_document
+editor_options: 
+  chunk_output_type: console
+execute: 
+  warning: false
+page-layout: full
+format:
+  html:
+    code-fold: false
+    code-summary: "Show the code"
+---
+
+```{r}
+#| label: setup
+
+library(tidyverse)
+library(broom)
+```
+
+
+First let's set up the true population effects for X (gaming playtime) on Y (wellbeing), which are in turn both exogenously caused by C (confounds).
+
+```{r}
+#| label: specify-true-effects
+
+n <- 500
+sims <- 1000
+eff_xy <- .2
+eff_cx <- .5
+eff_cy <- -.5
+```
+
+Now let's run 1000 studies with these effects and see. 
+
+```{r}
+#| label: simulate-studies
+
+simulate_study <- function(n = 500,
+                           sims = 1000,
+                           eff_xy = .2,
+                           eff_cx = .5,
+                           eff_cy = -.5, 
+                           controlForConfound = FALSE) {
+  dat <- tibble(
+    c = rnorm(n),
+    x = rnorm(n, eff_cx * c, 1),
+    y = rnorm(n, eff_cy * c + eff_xy * x, 1)
+  )
+  if (controlForConfound) {
+    model <- lm(y ~ x + c, data = dat)
+  } else if (!controlForConfound) {
+    model <- lm(y ~ x, data = dat)
+  }
+  
+  tidy(model) %>% filter(term == "x") %>% pull(estimate)
+}
+
+coefs <- replicate(n, simulate_study())
+
+```
+
+As we can see, the median effect is indistinguishable from 0; in other words, the confounding has completely masked the true .2 effect. 
+
+```{r}
+#| label: plot-results
+
+hist(coefs)
+abline(v = median(coefs), col = "red", lwd = 4)
+```
+
+If we run the same thing again but include the confound in the model, we recover the true .2 effect. 
+
+```{r}
+#| label: control-for-confound
+
+unbiasedCoefs <- replicate(n, simulate_study(controlForConfound = TRUE))
+hist(unbiasedCoefs)
+abline(v = median(unbiasedCoefs), col = "blue", lwd = 4)
+```
+

@@ -1,0 +1,39 @@
+Screened [3465] Don't play Nintendo #542776
+Screened [4184] Play Nintendo #542776
+
+Play Nintendo [2361] Did not link #574F93
+Play Nintendo [1823] Successfully linked #574F93
+
+Successfully linked  [216] No digital trace data #5978B0
+Successfully linked [1607] Any digital trace data #5978B0
+
+Any digital trace data [416] Did not complete\nwellbeing survey #5DA1CD
+// No digital trace data  [75] Completed\nwellbeing survey #5DA1CD
+// No digital trace data  [157] Did not complete\nwellbeing survey #5DA1CD
+Any digital trace data  [1191] Completed\nwellbeing survey #5DA1CD
+
+Completed\nwellbeing survey [427] Inactive during previous 3 months
+Completed\nwellbeing survey [26] Excluded for clock manipulation
+Completed\nwellbeing survey [34] Excluded for low-quality response
+
+
+Completed\nwellbeing survey [704] Final sample #db0910
+
+:Screened #542776
+
+:Play Nintendo #574F93
+:Don't play Nintendo #574F93
+
+:Successfully linked #5978B0
+:Did not link #5978B0
+
+:Any digital trace data #5DA1CD
+:No digital trace data  #5DA1CD
+
+:Did not complete\nwellbeing survey #60CAEB
+:Completed\nwellbeing survey #60CAEB
+
+:Excluded for clock manipulation #60CAEB
+:Excluded for low-quality response  #60CAEB
+:Inactive during previous 3 months  #60CAEB
+:Final sample #db0910
