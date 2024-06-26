@@ -125,6 +125,8 @@ library(careless)
 library(cowplot)
 library(marginaleffects)
 library(flextable)
+library(ggstance)
+library(crosstable)
 
 options(scipen = 999)
 ```
@@ -430,42 +432,46 @@ Participants were paid £0.15 for the 1-minute screening questionnaire, £3 for 
 #| tbl-cap: "Participant Demographics"
 #| apa-twocolumn: true
 
-ethnicities <- datDemo |> 
-  filter(pid %in% dat$pid & ethnicity != "DATA_EXPIRED") |> 
-  count(ethnicity, sort = TRUE) |>
-  mutate(p = n / sum(n)) |>
-  mutate(x = str_glue("{ethnicity} ({number(n, big.mark = '')}, {percent(p)})")) |>
-  slice(1:4) |>
-  pull(x) |>
-  knitr::combine_words()
-
-jobs <- datDemo |> 
-  filter(pid %in% dat$pid & employmentStatusProlific != "DATA_EXPIRED") |> 
-  count(employmentStatusProlific, sort = TRUE) |>
-  mutate(p = n / sum(n)) |>
-  mutate(x = str_glue("{employmentStatusProlific} ({number(n, big.mark = '')}, {percent(p)})")) |>
-  slice(1:4) |>
-  pull(x) |>
-  knitr::combine_words()
-
 dat |> 
-  select(age, gender) |> 
+  left_join(datDemo, by = "pid") |> 
+  select(age, gender, employment, eduLevel, ethnicity) |> 
   mutate(
+    Age = age,
     Gender = ifelse(!(gender %in% c("Man","Woman")), 
                      "Non-binary or other gender identity", 
-                     gender)
+                     gender),
+    `Employment Status` = ifelse(!(employment %in% c("Working full-time","Working part-time", "Student", "Not currently employed")), 
+                     "Other employment status", 
+                     employment),
+    Ethnicity = ifelse(!(ethnicity %in% c("White","Asian","Mixed","Black")), 
+                     "Other ethnicity", 
+                     ethnicity),
+    `Educational Level` = ifelse(!(eduLevel %in% c("University Bachelors Degree","Asian","Mixed","Black")), 
+                     "Other ethnicity", 
+                     eduLevel)
   ) |> 
-  group_by(Gender) |> 
-  summarise(
-    n = n(),
-            `Median age (SD)` = paste0(median(age, na.rm = TRUE), " (", round(sd(age, na.rm = TRUE), 2), ")")
-    ) |> 
-  flextable(cwidth = c(2.5, 1, 1)) %>% 
-  theme_apa() 
-
+  mutate(
+    Gender = fct_relevel(Gender, sort(table(Gender), decreasing = TRUE) %>% names()),
+    `Employment Status` = fct_relevel(`Employment Status`, sort(table(`Employment Status`), decreasing = TRUE) %>% names()),
+    Ethnicity = fct_relevel(Ethnicity, sort(table(Ethnicity), decreasing = TRUE) %>% names()),
+    `Educational Level` = fct_relevel(`Educational Level`, sort(table(`Educational Level`), decreasing = TRUE) %>% names())
+  ) |> 
+  crosstable(
+    cols = c("Age","Gender","Employment Status","Ethnicity"),
+    percent_digits = 1,
+    funs = c("Mean (SD)" = meansd, "Median (IQR)" = mediqr, "Min / Max" = minmax)
+  ) |> 
+  crosstable::as_flextable() |> 
+  set_header_labels(
+    values = c(
+      "Descriptor", "Variable", "Value")
+  ) |>
+  theme_apa() |> 
+  fontsize(size = 8, part = "all") |>  # Adjust font size
+  padding(padding = 0, part = "all")  # Adjust padding
 ```
 
-Demographic information about participants is shown in @tbl-demographics. All participants were residents of the US, and were majority white: `r ethnicities`. Approximately half were in full-time employment: `r jobs`.
+Participant demographics are shown in @tbl-demographics. 
 
 ## Measures
 
@@ -518,171 +524,52 @@ quantile(dat$playtime2wk, probs = seq(.1, .9, by = .1), na.rm = TRUE)
 
 ```{r}
 #| label: fig-playtime
-#| fig-cap: "Density of playtime across each of the observation periods from 1 hour to 1 year."
+#| fig-cap: "Description of playtime in the sample. Panel A shows the distribution of playtime across players for each observation period, with the mean shown in red; observations periods below the dashed line are shown as total hours, whereas periods above the dashed line reflect hours of player per day. Panel B shows the proportion of players who logged at least one play session in that period."
 #| fig-width: 8
 #| fig-height: 6
 #| fig-align: center
 #| fig-pos: "t"
 #| apa-twocolumn: true
 
-# played <- dat |> 
-#   select(pid, matches("played\\d")) |> 
-#   pivot_longer(cols = -pid, names_to = "timePeriod", values_to = "played") %>%
-#   group_by(timePeriod) %>%
-#   summarise(
-#     count = sum(played),
-#     prop = sum(played, na.rm = TRUE)/ n(),
-#   ) |> 
-#   mutate(
-#     timePeriod = factor(timePeriod, levels = playedDict),
-#     timePeriod = fct_rev(fct_recode(timePeriod, !!!playedDict)),
-#   ) |> 
-#   arrange(timePeriod) |> 
-#   mutate(index = 1:n()) |> 
-#   ggplot(aes(y = timePeriod, x = prop)) +
-#   geom_bar(stat = "identity", fill = "#164187") + 
-#   geom_text(aes(label = paste0(round(prop*100, 0), "% (", count, ")"),
-#                 hjust = ifelse(index <= 4, 1.1, -.1),
-#                 color = index <= 4), 
-#             size = 4) +
-#   mytheme + 
-#   theme(plot.margin = margin(3,1.5,3,0, "cm"),
-#         legend.position = "none") +
-#   scale_x_continuous(breaks = seq(0, 1, .25), labels = scales::percent) +
-#   scale_color_manual(values = c("black","white")) +
-#   labs(fill = "", x = "Proportion of\nparticipants with\nany playtime", y = "")
-# 
-# playtimeHist <- dat |> 
-#   filter(!is.na(recordedDate)) |> 
-#   select(pid, recordedDate, matches("playtime\\d")) |> 
-#   pivot_longer(cols = starts_with("playtime"), names_to = "timePeriod") |>
-#   filter(
-#     value > 0 & # we plot average playtime only for players with some logged data
-#       value < 2 # for some reason, we need to set the xmax limit here, as filtering later causes issues with proportion
-#     ) |> 
-#   mutate(
-#     timePeriod = factor(timePeriod, levels = playtimeDict),
-#     timePeriod = fct_recode(timePeriod, !!!playtimeDict)
-#   ) |> 
-#   mutate(value = value*60) |> # convert to minutes for a more granular plot
-#   ggplot(
-#     aes(x = value, 
-#         fill = timePeriod, 
-#         group = timePeriod,
-#         y = after_stat(density*width)) # width * density gives proper proportions in facet_wrapped plots
-#   ) + 
-#   geom_histogram(binwidth = .2*60, color = "black") +
-#   scale_y_continuous(limits = c(0, .65), labels = scales::percent) +
-#   scale_x_continuous(limits = c(-10, 120), breaks = seq(0, 120, 30)) +
-#   scale_fill_viridis_d() +
-#   mytheme + 
-#   labs(
-#     x = "Minutes of Daily Play\n(where playtime window < 24 hours,\nraw minutes)",
-#     y = "Proportion of responses"
-#   ) + 
-#   theme(legend.position = "none",
-#         axis.text.x = element_text(size = 10, angle = 30, vjust = 1, hjust = 1)) +
-#   facet_wrap(~timePeriod)
-# 
-# plot_grid(played, playtimeHist, ncol = 2, rel_widths = c(4, 6))
+p1 <- dat |> 
+  select(pid, matches("playtime\\d")) |> 
+  pivot_longer(-pid) |> 
+  mutate(name = fct_rev(fct_recode(name, !!!playtimeDict))) |> 
+  mutate(name = fct_inorder(name)) |> 
+  ggplot(aes(value, name)) +
+  geom_point(alpha = .6) +
+  geom_hline(yintercept = 5.5, linetype = "dashed") +
+  stat_summary(fun = mean, col = "red") +
+  labs(
+    x = "Hours of (daily) play",
+    y = "Observation Period"
+  ) +
+  scale_x_continuous(limits = c(0, 6), 
+                     breaks = c(0, 1, 2, 3, 4, 5, 6)) +
+  mytheme
 
-#### Heatmap attempt
-dat |> 
-  select(pid, recordedDate, matches("playtime\\d")) |> 
-  pivot_longer(cols = starts_with("playtime"), names_to = "timePeriod") |>
-  filter(!is.na(value)) |> 
-  mutate(
-    timePeriod = factor(timePeriod, levels = playtimeDict),
-    timePeriod = fct_recode(timePeriod, !!!playtimeDict)
+p2 <- dat |> 
+  select(pid, matches("played\\d")) |> 
+  mutate(across(where(is.logical), as.numeric)) |> 
+  pivot_longer(-pid) |> 
+  mutate(name = fct_rev(fct_recode(name, !!!playedDict))) |> 
+  mutate(name = fct_inorder(name)) |> 
+  summarise(
+    n = sum(value),
+    .by = c(name)
   ) |> 
-  mutate(
-    playtimeCat = factor(case_when(
-    value > 40/60 ~ ">40\nmin/day",
-    value > 30/60 ~ "30-40\nmin/day",
-    value > 20/60 ~ "20-30\nmin/day",
-    value > 10/60 ~ "10-20\nmin/day",
-    value > 0 ~ "0-10\nmin/day",
-    value == 0 ~ "No play during\nobservation\nperiod"),
-    levels = c("No play during\nobservation\nperiod", "0-10\nmin/day", "10-20\nmin/day", "20-30\nmin/day", 
-               "30-40\nmin/day", ">40\nmin/day"))
-  ) |> 
-  group_by(playtimeCat, timePeriod) |> 
-  summarise(count = n(),
-            prop = n()/nrow(dat)) |> 
-  ungroup() |> 
-  complete(timePeriod, playtimeCat, fill = list(count = 0, prop = 0)) |> 
-  ggplot(aes(playtimeCat, timePeriod, fill = count)) + 
-  geom_tile() +
-  geom_text(aes(label = count), color = "#404040") +
-  labs(x = "", y = "Observation Window", fill = "Count") +
-  scale_fill_gradient(low="white", high="blue") +
-  theme_half_open()
+  ggplot(aes(n, name)) +
+  scale_x_continuous(
+    "Participants",
+    sec.axis = sec_axis(
+      ~ . / length(unique(dat$pid)), name = "Proportion"
+    )
+  ) +
+  labs(y = "") +
+  geom_point() +
+  mytheme
 
-
-dat |> 
-  select(playtime1d, playtime2wk, playtime3mo, playtime1yr) |> 
-  # convert back to total playtime in hours, rather than minutes per day
-  # mutate(
-  #   playtime1d = playtime1d*24,
-  #   playtime2wk = playtime2wk*24*14,
-  #   playtime3mo = playtime3mo*24*91,
-  #   playtime1yr = playtime1yr*24*36
-  # ) |> 
-  # scale_x_continuous(labels = scales::cut_si()) +
-  pivot_longer(cols = everything(), 
-               names_to = "timewindow", 
-               names_pattern = "playtime(.*)", 
-               values_to = "playtime") |> 
-  mutate(timewindow = fct_recode(timewindow,
-                                 "1 Day" = "1d",
-                                 "2 Weeks" = "2wk",
-                                 "3 Months" = "3mo",
-                                 "1 Year" = "1yr"),
-         timewindow = fct_relevel(timewindow, 
-                                  "1 Day", 
-                                  "2 Weeks", 
-                                  "3 Months", 
-                                  "1 Year"),
-         # playtime = if_else(playtime == 0, map_dbl(playtime, ~ sample(c(0, -.1, -.2, -.3), 1)), playtime)
-  ) |> 
-  ggplot(aes(x = timewindow, y = playtime, fill = timewindow)) +
-  stat_slab(
-    density = ggdist::density_bounded(bandwidth = "nrd0"),
-    normalize = "all",
-    # height = 2
-    scale = .4,
-  ) +
-  stat_dots(
-    side = "left",
-    justification = 1.2,
-    overflow = "compress",
-    # overflow = "multiple",
-    binwidth = .1,
-    dotsize = .5,
-    scale = .4,
-    color = NA,
-    layout = "hex",
-    # stackratio = .5,
-    overlaps = "nudge",
-    # verbose = TRUE,
-    alpha = .3
-  ) +
-  geom_boxplot(
-    width = .10, 
-    outlier.shape = NA
-  ) +
-  labs(x = "Observation Period", y = "Daily Hours of Playtime") +
-  scale_y_continuous(
-    trans = "sqrt",
-    breaks = c(0, .2, .5, 1, 2, 3, 4, 5),
-    limits = c(0, 5)
-    # limits = c(-.3, 5),
-  ) +
-  scale_x_discrete(expand = c(0, 0)) +
-  coord_cartesian(xlim = c(.3, 4.3)) +
-  mytheme +
-  theme(legend.position = "none") +
-  scale_fill_viridis_d()
+(p1 | p2) + plot_layout(axes = "collect") + plot_annotation(tag_level = "A")
 
 ```
 
