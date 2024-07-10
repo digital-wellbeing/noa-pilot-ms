@@ -64,7 +64,7 @@ author:
     #   - funding acquisition
     #   - project administration
     #   - editing
-abstract: "Studies on video games and well-being often rely on self-report measures or data from a single game. Here, we study how 704 US adults' time spent playing over 150 1st-party Nintendo Switch games (totaling 140k hours) relates to their life satisfaction, affect, depressive symptoms, and general mental well-being. We replicate previous findings that playtime over the past 2 weeks does not predict well-being, and extend these findings to a wider range of timescales (1 hour to 1 year). Results suggest that relationships, if present, dissipate within 2 hours of gameplay. Our non-causal findings suggest substantial confounding would be needed to shift a meaningful true effect to the observed null. Although playtime was not related to well-being, players’ assessments of the value of game time—so called gaming life fit—was. Results emphasize the importance of defining the gaming population of interest, collecting data from more than one game, and focusing on how players integrate gaming into their lives rather than the amount of time spent."
+abstract: "Studies on video games and well-being often rely on self-report measures or data from a single game. Here, we study how 703 US adults' time spent playing over 150 1st-party Nintendo Switch games (totaling 140k hours) relates to their life satisfaction, affect, depressive symptoms, and general mental well-being. We replicate previous findings that playtime over the past 2 weeks does not predict well-being, and extend these findings to a wider range of timescales (1 hour to 1 year). Results suggest that relationships, if present, dissipate within 2 hours of gameplay. Our non-causal findings suggest substantial confounding would be needed to shift a meaningful true effect to the observed null. Although playtime was not related to well-being, players’ assessments of the value of game time—so called gaming life fit—was. Results emphasize the importance of defining the gaming population of interest, collecting data from more than one game, and focusing on how players integrate gaming into their lives rather than the amount of time spent."
 keywords: [video games, digital trace data, well-being]
 author-note:
   # Disclosures condensed to one paragraph, but you can start a field with two line breaks to break them up: \n\nNew Paragraph
@@ -102,9 +102,9 @@ format:
 #| label: setup
 
 knitr::opts_chunk$set(
-  echo = knitr::is_html_output(), 
-  warning = FALSE, 
-  message = FALSE, 
+  echo = knitr::is_html_output(),
+  warning = FALSE,
+  message = FALSE,
   output = TRUE
 )
 ```
@@ -138,40 +138,41 @@ options(scipen = 999)
 #| label: load-data
 
 datSurveyRaw <- read_csv("data/survey.csv.gz")
-datRaw <- read_csv("data/telemetry.csv.gz") |> 
+datRaw <- read_csv("data/telemetry.csv.gz") |>
   left_join(datSurveyRaw, by = "pid")
 datDemo <- read_csv("data/demographics.csv.gz")
-
 ```
 
 ```{r}
 #| label: custom-functions
 
 # Function for calculating playtime, relying on vectorized pmin()/pmax()
-# When using the durations from Nintendo - we take the duration of sessions that begin or end during the playtime window, and weight them in case of partial sessions 
-calculatePlaytime <- function(sessionStart, 
-                              sessionEnd, 
-                              recordedDate, 
+# When using the durations from Nintendo - we take the duration of sessions that begin or end during the playtime window, and weight them in case of partial sessions
+calculatePlaytime <- function(sessionStart,
+                              sessionEnd,
+                              recordedDate,
                               duration, # column containing duration as calculated by nintendo
-                              timeWindows, 
+                              timeWindows,
                               nintendo = FALSE # calculate duration based solely on start/end times (FALSE), or nintendo's heuristics (TRUE)
 ) {
-  
-  overlaps <- map(timeWindows, ~{
+  overlaps <- map(timeWindows, ~ {
     overlapStart <- pmax(sessionStart, as_datetime(recordedDate) %m-% .x)
     overlapEnd <- pmin(sessionEnd, recordedDate)
     overlapTime <- interval(overlapStart, overlapEnd) / dhours(1)
-    
+
     if (nintendo) {
-      weight <- overlapTime/ (interval(sessionStart, sessionEnd) / dhours(1)) 
-      overlap <- pmax(0, duration*weight) # if the overlap is negative, return 0
+      weight <- overlapTime / (interval(sessionStart, sessionEnd) / dhours(1))
+      overlap <- pmax(0, duration * weight) # if the overlap is negative, return 0
     } else {
       overlap <- pmax(0, overlapTime) # if the overlap is negative, return 0
     }
-    
   })
   # Set the names of the list elements to correspond to the windows
-  names(overlaps) <- if (nintendo) { paste0("overlapNintendo", names(timeWindows))} else { paste0("overlap", names(timeWindows)) }
+  names(overlaps) <- if (nintendo) {
+    paste0("overlapNintendo", names(timeWindows))
+  } else {
+    paste0("overlap", names(timeWindows))
+  }
   return(overlaps)
 }
 
@@ -181,7 +182,7 @@ mytheme <- list(
       strip.background = element_rect(fill = "black"),
       strip.text = element_text(color = "white", size = 10),
       panel.grid.minor = element_blank(),
-      panel.border = element_rect(colour = "black", fill=NA, size=1),
+      panel.border = element_rect(colour = "black", fill = NA, size = 1),
       axis.text.y = element_text(size = 10, hjust = .5, vjust = -.015),
       axis.text.x = element_text(size = 10),
       axis.title.x = element_text(hjust = .45, size = 10, face = "bold"),
@@ -201,17 +202,16 @@ playtimeDict <- c(
 )
 
 nintendoDict <- c(
-  "1H" = "playtimeNintendo1hr", "2H" = "playtimeNintendo2hr","6H" = "playtimeNintendo6hr", "12H" = "playtimeNintendo12hr", 
+  "1H" = "playtimeNintendo1hr", "2H" = "playtimeNintendo2hr", "6H" = "playtimeNintendo6hr", "12H" = "playtimeNintendo12hr",
   "1D" = "playtimeNintendo1d", "3D" = "playtimeNintendo3d", "1W" = "playtimeNintendo1wk", "2W" = "playtimeNintendo2wk",
   "1M" = "playtimeNintendo1mo", "3M" = "playtimeNintendo3mo", "6M" = "playtimeNintendo6mo", "1 Year" = "playtimeNintendo1yr"
 )
-  
+
 playedDict <- c(
   "1H" = "played1hr", "2H" = "played2hr", "6H" = "played6hr", "12H" = "played12hr",
   "1D" = "played1d", "3D" = "played3d", "1W" = "played1wk", "2W" = "played2wk",
   "1M" = "played1mo", "3M" = "played3mo", "6M" = "played6mo", "1Y" = "played1yr"
 )
-
 ```
 
 Video games played on smartphones, computers, or home consoles are now a widely pursued form of leisure that involves social interaction, creativity, problem-solving, and growth [@BourgonjonEtAl2016Players]. Major firms like Nintendo have sold hundreds of millions of games consoles in recent years [@NintendoJapan2024Top] and online platforms like Steam typically have more than 30 million players online at any given time [@SteamCharts2024SteamCharts]. This staggering investment of human capital has inspired both national [@AmericanPsychiatricAssociation2013diagnostic] and international [@WorldHealthOrganization2018international] health bodies to focus on play as contributor to psychopathology.
@@ -263,61 +263,62 @@ timeWindows <- list(
 overlaps <- calculatePlaytime(datRaw$sessionStart, datRaw$sessionEnd, datRaw$recordedDate, datRaw$duration, timeWindows, nintendo = FALSE)
 overlapsNintendo <- calculatePlaytime(datRaw$sessionStart, datRaw$sessionEnd, datRaw$recordedDate, datRaw$duration, timeWindows, nintendo = TRUE)
 
-datAll <- datRaw |> 
+datAll <- datRaw |>
   lazy_dt() |>
-  # Add the time overlaps to the df 
-  mutate(across(everything(), ~.x), !!!overlaps,
-         across(everything(), ~.x), !!!overlapsNintendo) |> 
+  # Add the time overlaps to the df
+  mutate(
+    across(everything(), ~.x), !!!overlaps,
+    across(everything(), ~.x), !!!overlapsNintendo
+  ) |>
   mutate(
     impliedDuration = interval(sessionStart, sessionEnd) / dhours(1)
-  ) |> 
-  filter(duration < 24*60 & impliedDuration < 24) |> # drop implausible sessions lasting more than 24 hours
+  ) |>
+  filter(duration < 24 * 60 & impliedDuration < 24) |> # drop implausible sessions lasting more than 24 hours
   group_by(pid) |>
   summarise(
     across(-starts_with("overlap"), first), # all survey columns are identical within participants, so we just take the first
-    
+
     # The sub-one day intervals have no denominator
     playtime1hr = sum(overlap1hr),
     playtime2hr = sum(overlap2hr),
     playtime6hr = sum(overlap6hr),
     playtime12hr = sum(overlap12hr),
     playtime1d = sum(overlap1d),
-    
+
     # Those longer than one day are divided by the number of days in the interval to indicate
     # mean hours of play per day during that period
-    playtime3d = sum(overlap3d)/3,
-    playtime1wk = sum(overlap1wk)/7,
-    playtime2wk = sum(overlap2wk)/14,
-    playtime1mo = sum(overlap1mo)/30,
-    playtime3mo = sum(overlap3mo)/90,
-    playtime6mo = sum(overlap6mo)/180,
-    playtime1yr = sum(overlap1yr)/365,
-    
+    playtime3d = sum(overlap3d) / 3,
+    playtime1wk = sum(overlap1wk) / 7,
+    playtime2wk = sum(overlap2wk) / 14,
+    playtime1mo = sum(overlap1mo) / 30,
+    playtime3mo = sum(overlap3mo) / 90,
+    playtime6mo = sum(overlap6mo) / 180,
+    playtime1yr = sum(overlap1yr) / 365,
+
     # repeat for nintendo duration
     playtimeNintendo1hr = sum(overlapNintendo1hr),
     playtimeNintendo2hr = sum(overlapNintendo2hr),
     playtimeNintendo6hr = sum(overlapNintendo6hr),
     playtimeNintendo12hr = sum(overlapNintendo12hr),
     playtimeNintendo1d = sum(overlapNintendo1d),
-    
-    playtimeNintendo3d = sum(overlapNintendo3d)/3,
-    playtimeNintendo1wk = sum(overlapNintendo1wk)/7,
-    playtimeNintendo2wk = sum(overlapNintendo2wk)/14,
-    playtimeNintendo1mo = sum(overlapNintendo1mo)/30,
-    playtimeNintendo3mo = sum(overlapNintendo3mo)/90,
-    playtimeNintendo6mo = sum(overlapNintendo6mo)/180,
-    playtimeNintendo1yr = sum(overlapNintendo1yr)/365,
-  ) |> 
-  
+    playtimeNintendo3d = sum(overlapNintendo3d) / 3,
+    playtimeNintendo1wk = sum(overlapNintendo1wk) / 7,
+    playtimeNintendo2wk = sum(overlapNintendo2wk) / 14,
+    playtimeNintendo1mo = sum(overlapNintendo1mo) / 30,
+    playtimeNintendo3mo = sum(overlapNintendo3mo) / 90,
+    playtimeNintendo6mo = sum(overlapNintendo6mo) / 180,
+    playtimeNintendo1yr = sum(overlapNintendo1yr) / 365,
+  ) |>
   # calculate binary versions of each playtime metric (i.e., played at all vs did not play at all)
   mutate(across(starts_with("playtime"),
-                ~ . > 0,
-                .names = "played{.col}"
-         )) |> 
-  rename_with(.fn = ~ str_replace(.x, "playtime", ""),
-              .cols = starts_with("played")) |> 
-  
-  select(-(titleID:operationMode), -impliedDuration) |>  # drop telemetry columns; can still be accessed in datRaw
+    ~ . > 0,
+    .names = "played{.col}"
+  )) |>
+  rename_with(
+    .fn = ~ str_replace(.x, "playtime", ""),
+    .cols = starts_with("played")
+  ) |>
+  select(-(titleID:operationMode), -impliedDuration) |> # drop telemetry columns; can still be accessed in datRaw
   as_tibble()
 
 # Code used to identify item pairs with high sample correlations
@@ -327,36 +328,35 @@ datAll <- datRaw |>
 ```{r}
 #| label: clean-survey
 
-datAll <- datAll |> 
-  
-  mutate(genderRC = ifelse(gender %in% c("Man","Woman",NA), gender, "Non-binary")) |> 
-  rowwise() |> 
+datAll <- datAll |>
+  mutate(genderRC = ifelse(gender %in% c("Man", "Woman", NA), gender, "Non-binary")) |>
+  rowwise() |>
   mutate(
     meanWemwbs = mean(c_across(starts_with("wemwbs"))),
     meanPromis = mean(c_across(starts_with("promis"))),
     meanLifeFit = mean(c_across(starts_with("displacement"))),
     meanBPS = mean(c_across(starts_with("bps"))),
-  ) |> 
-  ungroup() |> 
+  ) |>
+  ungroup() |>
   mutate(
-    csas = rescale(csas, from = c(0,10), to = c(1,5)),
+    csas = rescale(csas, from = c(0, 10), to = c(1, 5)),
     affectiveValence = rescale(affectiveValence_1, from = c(1, 100), to = c(1, 5)),
     .keep = "unused"
-    ) %>%
-  
+  ) %>%
   # Here we run additional checks for potential careless responders using the (1) inter-item correlation and (2) longstring techniques.
-  # In the first, we take the within-measure item pairs with the strongest correlation 
+  # In the first, we take the within-measure item pairs with the strongest correlation
   # in the sample, and then identify the participants whose scores substantially differed, suggesting potential carelessness.
   #
-  # In the second, we look at the number of consecutive identical answers. 
-  # Together, this catches most participants who either gave identical answers to all questions or who chose answers semi-randomly. 
-  
+  # In the second, we look at the number of consecutive identical answers.
+  # Together, this catches most participants who either gave identical answers to all questions or who chose answers semi-randomly.
+
   mutate(
     longstring = longstring(select(., bangs_1:bangs_18)),
     intraIndVar = irv(select(., promis_1:promis_8),
-                      na.rm = TRUE,
-                      num.split = 1)
-  ) |> 
+      na.rm = TRUE,
+      num.split = 1
+    )
+  ) |>
   mutate(
     weirdLongstring = longstring > 8,
     weirdPromis = abs(promis_5 - promis_1) >= 4,
@@ -371,30 +371,30 @@ datAll <- datAll |>
 
 ## Apply exclusion criteria, as preregistered
 
-nonResponders <- datAll |> 
-  filter(is.na(recordedDate)) |> 
+nonResponders <- datAll |>
+  filter(is.na(recordedDate)) |>
   pull(pid)
 
 ## Clock hackers (sessions taking place in the future)
 clockHackers <- datRaw |>
   arrange(desc(sessionEnd)) |>
-  filter(sessionEnd > "2024-05-20") |> 
-  pull(pid) |> 
+  filter(sessionEnd > "2024-05-20") |>
+  pull(pid) |>
   unique()
 
 ## Players with no playtime in the last 3 months are dropped from all analyses
-nonPlayers <- datAll |> 
-  filter(!played3mo) |> 
-  pull(pid) |> 
+nonPlayers <- datAll |>
+  filter(!played3mo) |>
+  pull(pid) |>
   unique()
 
-# filter out in stages, in case of manual look at change in sample size after each 
-dat <- datAll |> 
-  filter(!pid %in% nonResponders) |> 
-  filter(!pid %in% nonPlayers) |> 
-  filter(!pid %in% clockHackers) |> 
-  filter(possibleCareless %in% c(FALSE, NA)) |> 
-  select(-starts_with(c("wemwbs","bangs","trojan","promis","timeUse","recent","weird")), -c(positives,problematicPlay,feedback))
+# filter out in stages, in case of manual look at change in sample size after each
+dat <- datAll |>
+  filter(!pid %in% nonResponders) |>
+  filter(!pid %in% nonPlayers) |>
+  filter(!pid %in% clockHackers) |>
+  filter(possibleCareless %in% c(FALSE, NA)) |>
+  select(-starts_with(c("wemwbs", "bangs", "trojan", "promis", "timeUse", "recent", "weird")), -c(positives, problematicPlay, feedback))
 
 numCareless <- table(datAll$possibleCareless)[2]
 ```
@@ -418,43 +418,48 @@ Participants were paid £0.15 for the 1-minute screening questionnaire, £3 for 
 #| tbl-cap: "Participant Demographics"
 #| apa-twocolumn: true
 
-dat |> 
-  left_join(datDemo, by = "pid") |> 
-  select(age, gender, employment, eduLevel, ethnicity) |> 
+dat |>
+  left_join(datDemo, by = "pid") |>
+  select(age, gender, employment, eduLevel, ethnicity) |>
   mutate(
     Age = age,
-    Gender = ifelse(!(gender %in% c("Man","Woman")), 
-                     "Non-binary or other gender identity", 
-                     gender),
-    `Employment Status` = ifelse(!(employment %in% c("Working full-time","Working part-time", "Student", "Not currently employed")), 
-                     "Other employment status", 
-                     employment),
-    Ethnicity = ifelse(!(ethnicity %in% c("White","Asian","Mixed","Black")), 
-                     "Other ethnicity", 
-                     ethnicity),
-    `Educational Level` = ifelse(!(eduLevel %in% c("University Bachelors Degree","Asian","Mixed","Black")), 
-                     "Other ethnicity", 
-                     eduLevel)
-  ) |> 
+    Gender = ifelse(!(gender %in% c("Man", "Woman")),
+      "Non-binary or other gender identity",
+      gender
+    ),
+    `Employment Status` = ifelse(!(employment %in% c("Working full-time", "Working part-time", "Student", "Not currently employed")),
+      "Other employment status",
+      employment
+    ),
+    Ethnicity = ifelse(!(ethnicity %in% c("White", "Asian", "Mixed", "Black")),
+      "Other ethnicity",
+      ethnicity
+    ),
+    `Educational Level` = ifelse(!(eduLevel %in% c("University Bachelors Degree", "Asian", "Mixed", "Black")),
+      "Other ethnicity",
+      eduLevel
+    )
+  ) |>
   mutate(
     Gender = fct_relevel(Gender, sort(table(Gender), decreasing = TRUE) %>% names()),
     `Employment Status` = fct_relevel(`Employment Status`, sort(table(`Employment Status`), decreasing = TRUE) %>% names()),
     Ethnicity = fct_relevel(Ethnicity, sort(table(Ethnicity), decreasing = TRUE) %>% names()),
     `Educational Level` = fct_relevel(`Educational Level`, sort(table(`Educational Level`), decreasing = TRUE) %>% names())
-  ) |> 
+  ) |>
   crosstable(
-    cols = c("Age","Gender","Employment Status","Ethnicity"),
+    cols = c("Age", "Gender", "Employment Status", "Ethnicity"),
     percent_digits = 1,
     funs = c("Mean (SD)" = meansd, "Median (IQR)" = mediqr, "Min / Max" = minmax)
-  ) |> 
-  crosstable::as_flextable() |> 
+  ) |>
+  crosstable::as_flextable() |>
   set_header_labels(
     values = c(
-      "Descriptor", "Variable", "Value")
+      "Descriptor", "Variable", "Value"
+    )
   ) |>
-  theme_apa() |> 
-  fontsize(size = 8, part = "all") |>  # Adjust font size
-  padding(padding = 0, part = "all")  # Adjust padding
+  theme_apa() |>
+  fontsize(size = 8, part = "all") |> # Adjust font size
+  padding(padding = 0, part = "all") # Adjust padding
 ```
 
 ## Participants and Exclusions
@@ -504,8 +509,8 @@ Note: this method of specifying an SESOI is predicated on a causal interpretatio
 #| label: playtime-quantiles
 #| eval: false
 
-playtime <- median_qi(dat, playtime2wk*14, .width = .7, na.rm = TRUE) |> 
-  mutate(across(where(is.numeric), ~round(., 2)))
+playtime <- median_qi(dat, playtime2wk * 14, .width = .7, na.rm = TRUE) |>
+  mutate(across(where(is.numeric), ~ round(., 2)))
 playtime <- str_glue("{playtime[1]} ({playtime[2]}, {playtime[3]}; 2nd and 8th deciles)")
 
 quantile(dat$playtime2wk, probs = seq(.1, .9, by = .1), na.rm = TRUE)
@@ -520,11 +525,11 @@ quantile(dat$playtime2wk, probs = seq(.1, .9, by = .1), na.rm = TRUE)
 #| fig-pos: "t"
 #| apa-twocolumn: true
 
-p1 <- dat |> 
-  select(pid, matches("playtime\\d")) |> 
-  pivot_longer(-pid) |> 
-  mutate(name = fct_rev(fct_recode(name, !!!playtimeDict))) |> 
-  mutate(name = fct_inorder(name)) |> 
+p1 <- dat |>
+  select(pid, matches("playtime\\d")) |>
+  pivot_longer(-pid) |>
+  mutate(name = fct_rev(fct_recode(name, !!!playtimeDict))) |>
+  mutate(name = fct_inorder(name)) |>
   ggplot(aes(value, name)) +
   geom_point(alpha = .6) +
   geom_hline(yintercept = 5.5, linetype = "dashed") +
@@ -533,25 +538,28 @@ p1 <- dat |>
     x = "Hours of (daily) play",
     y = "Observation Period"
   ) +
-  scale_x_continuous(limits = c(0, 6), 
-                     breaks = c(0, 1, 2, 3, 4, 5, 6)) +
+  scale_x_continuous(
+    limits = c(0, 6),
+    breaks = c(0, 1, 2, 3, 4, 5, 6)
+  ) +
   mytheme
 
-p2 <- dat |> 
-  select(pid, matches("played\\d")) |> 
-  mutate(across(where(is.logical), as.numeric)) |> 
-  pivot_longer(-pid) |> 
-  mutate(name = fct_rev(fct_recode(name, !!!playedDict))) |> 
-  mutate(name = fct_inorder(name)) |> 
+p2 <- dat |>
+  select(pid, matches("played\\d")) |>
+  mutate(across(where(is.logical), as.numeric)) |>
+  pivot_longer(-pid) |>
+  mutate(name = fct_rev(fct_recode(name, !!!playedDict))) |>
+  mutate(name = fct_inorder(name)) |>
   summarise(
     n = sum(value),
     .by = c(name)
-  ) |> 
+  ) |>
   ggplot(aes(n, name)) +
   scale_x_continuous(
     "Participants",
     sec.axis = sec_axis(
-      ~ . / length(unique(dat$pid)), name = "Proportion"
+      ~ . / length(unique(dat$pid)),
+      name = "Proportion"
     )
   ) +
   labs(y = "") +
@@ -559,7 +567,6 @@ p2 <- dat |>
   mytheme
 
 (p1 | p2) + plot_layout(axes = "collect") + plot_annotation(tag_level = "A")
-
 ```
 
 Given the lack of holistic or platform-level data available in the literature, our first goal was to simply describe the volume of play. This is visualized in @fig-playtime, which show that despite a total play volume of more than 140k hours, our sample was largely minimally engaged with 1st party Nintendo games. During the 2 weeks prior to survey completion, just over half of the sample had 0 sessions logged. The top 10% of players were moderately engaged, playing an average of 60 minutes per day. Sessions of a game lasted on average `r round(median(datRaw$duration, na.rm = T), 1)` minutes \[10th percentile: `r quantile(datRaw$duration, .1)`; 90th percentile: `r quantile(datRaw$duration, .9)`\].
@@ -603,7 +610,7 @@ performance::check_model(h1wemwbs)
 #| fig-pos: "t"
 #| apa-twocolumn: true
 
-dat |> 
+dat |>
   pivot_longer(cols = c("csas", "affectiveValence", "meanPromis", "meanWemwbs")) |>
   mutate(name = case_when(
     name == "csas" ~ "Life Satisfaction",
@@ -611,19 +618,19 @@ dat |>
     name == "meanPromis" ~ "Depressive Symptoms",
     name == "meanWemwbs" ~ "General well-being",
     TRUE ~ NA_character_
-    )) |> 
-  ggplot(aes(x = playtime2wk*60, y = value)) +
+  )) |>
+  ggplot(aes(x = playtime2wk * 60, y = value)) +
   geom_point(size = .6) +
-  geom_smooth(method='lm', formula = y~x, level = .99, color = "darkgreen", fill = "darkgrey") +
+  geom_smooth(method = "lm", formula = y ~ x, level = .99, color = "darkgreen", fill = "darkgrey") +
   scale_x_sqrt(breaks = c(0, 15, 60, 120, 240, 420)) +
   labs(x = "Minutes of play per day\nduring previous 2 weeks (Square Root Axis)", y = "Outcome (1-5 scale)") +
   mytheme +
   # theme(
   #   axis.line.y = element_line(linewidth = .5)
-  # ) + 
+  # ) +
   # scale_y_continuous(labels = scales::percent) +
   facet_wrap(~name)
-  
+
 # plot_predictions(h1csas, condition = "playtime2wk") # test with marginaleffects
 ```
 
@@ -638,46 +645,52 @@ However, due to lower than expected response rates and total volume of playtime,
 ```{r}
 #| label: model-fitting
 
-models <- expand.grid(predictor = dat |> select(matches("playtime\\d")) |> names(),
-                      outcome = c("csas","affectiveValence","meanWemwbs","meanPromis")) |> 
+models <- expand.grid(
+  predictor = dat |> select(matches("playtime\\d")) |> names(),
+  outcome = c("csas", "affectiveValence", "meanWemwbs", "meanPromis")
+) |>
   mutate(formula = paste0(outcome, " ~ ", predictor, " + age + genderRC + eduLevel + employment"))
 
 fittedModels <- map_df(
-  models$formula, ~lm(as.formula(.x), 
-                      data = dat) |> 
-    broom::tidy(conf.int = TRUE, conf.level = .99) |> 
+  models$formula, ~ lm(as.formula(.x),
+    data = dat
+  ) |>
+    broom::tidy(conf.int = TRUE, conf.level = .99) |>
     filter(grepl("play", term))
-) |> 
-  mutate(predictor = models$predictor,
-         outcome = models$outcome) |> 
+) |>
+  mutate(
+    predictor = models$predictor,
+    outcome = models$outcome
+  ) |>
   select(predictor, outcome, everything())
 ```
 
 ```{r}
 #| label: fig-ests
-#| fig-cap: Estimates for the relationship between playtime and well-being across various timescales, shown with 90% (dark blue) and 99% (light blue) confidence intervals. Dashed lines represent the positive and negative smallest effect size of interest (SESOI) of .06. 
+#| fig-cap: Estimates for the relationship between playtime and well-being across various timescales, shown with 90% (dark blue) and 99% (light blue) confidence intervals. Dashed lines represent the positive and negative smallest effect size of interest (SESOI) of .06.
 #| fig-width: 6
 #| fig-height: 4.5
 #| fig-align: center
 #| fig-pos: "t"
 #| apa-twocolumn: true
 
-fittedModels |> 
+fittedModels |>
   mutate(
     model = paste0(outcome, " ~ ", predictor),
     predictor = fct_rev(fct_recode(predictor, !!!playtimeDict)),
     outcome = fct_recode(outcome,
-                         "Life Satisfaction" = "csas",
-                         "Affect" = "affectiveValence",
-                         "Depressive Symptoms" = "meanPromis",
-                         "General Mental Well-being" = "meanWemwbs"),
-    
+      "Life Satisfaction" = "csas",
+      "Affect" = "affectiveValence",
+      "Depressive Symptoms" = "meanPromis",
+      "General Mental Well-being" = "meanWemwbs"
+    ),
+
     # some hacky code to match up the time periods with their lubridate::period objects and then convert to numeric
     # so we can plot on the log scale
     window = map(sub("playtime", "", term), ~ timeWindows[.]),
     window = map_dbl(window, ~ as.numeric(.x[[1]], "hours")),
-    conf.high.90 = estimate + 1.645*std.error,
-    conf.low.90 = estimate - 1.645*std.error
+    conf.high.90 = estimate + 1.645 * std.error,
+    conf.low.90 = estimate - 1.645 * std.error
   ) |>
   ggplot(aes(x = window, y = estimate)) +
   geom_ribbon(
@@ -708,11 +721,10 @@ fittedModels |>
     # axis.title.y = element_text(angle = 0, vjust = .5),
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(linewidth = .1)
-    ) +
+  ) +
   geom_hline(yintercept = .06, linetype = "dashed", linewidth = .3, color = "black") +
   geom_hline(yintercept = -.06, linetype = "dashed", linewidth = .3, color = "black") +
   facet_wrap(~outcome, scales = "free_y")
-
 ```
 
 Next, we conducted exploratory analyses to understand if the relationship between playtime and well-being varies across different playtime periods (@fig-ests). Broadly, results align with the results of H1---in all models, 99% CIs overlapped 0, but due to low precision no estimate was fully within the equivalence bounds. We therefore do not find evidence for a meaningful relationship between playtime and well-being at any timescale, but cannot rule out the possibility of one existing.
@@ -725,44 +737,51 @@ Estimates are especially uncertain for observation periods of 6 hours or less, a
 #| label: moderation
 #| include: false
 
-moderationModels <- expand.grid(predictor = dat |> select(matches("playtime\\d")) |> names(),
-                      outcome = c("csas","affectiveValence","meanWemwbs","meanPromis")) |> 
+moderationModels <- expand.grid(
+  predictor = dat |> select(matches("playtime\\d")) |> names(),
+  outcome = c("csas", "affectiveValence", "meanWemwbs", "meanPromis")
+) |>
   mutate(formula = paste0(outcome, " ~ ", predictor, "*meanLifeFit + ", predictor, "*age + ", predictor, "*genderRC"))
 
 moderationFits <- map_df(
-  moderationModels$formula, ~lm(as.formula(.x), 
-                                data = dat) |> 
+  moderationModels$formula, ~ lm(as.formula(.x),
+    data = dat
+  ) |>
     broom::tidy(conf.int = TRUE, conf.level = .99)
-) |> 
-  mutate(predictor = rep(moderationModels$predictor, each = 10),
-         outcome = rep(moderationModels$outcome, 10)) |> 
+) |>
+  mutate(
+    predictor = rep(moderationModels$predictor, each = 10),
+    outcome = rep(moderationModels$outcome, 10)
+  ) |>
   select(predictor, outcome, everything())
 
-directEsts <- moderationFits |> 
+directEsts <- moderationFits |>
   filter(!grepl("playtime", term) & grepl("meanLifeFit", term)) |>
-  # filter(!grepl(":", term)) |> 
-  mutate(across(estimate, abs),
-         across(where(is.numeric), ~round(., 3)))
+  # filter(!grepl(":", term)) |>
+  mutate(
+    across(estimate, abs),
+    across(where(is.numeric), ~ round(., 3))
+  )
 
-moderationEsts <- moderationFits |> 
-  filter(grepl(":meanLifeFit", term)) |> 
-  # filter(grepl("playtime", term) & grepl("Displace", term)) |> 
-  mutate(across(where(is.numeric), ~round(., 3)))
+moderationEsts <- moderationFits |>
+  filter(grepl(":meanLifeFit", term)) |>
+  # filter(grepl("playtime", term) & grepl("Displace", term)) |>
+  mutate(across(where(is.numeric), ~ round(., 3)))
 ```
 
 ```{r}
 #| label: fig-lifefit
-#| fig-cap: Marginal relationship between gaming life fit (perceived harmful or beneficial effects of games for oneself) and wellbeing 
+#| fig-cap: Marginal relationship between gaming life fit (perceived harmful or beneficial effects of games for oneself) and wellbeing
 #| fig-width: 6
 #| fig-height: 4.5
 #| fig-align: center
 #| fig-pos: "t"
 #| apa-twocolumn: true
 
-lifeFitCsas <- lm(csas ~ meanLifeFit*playtime2wk + age + genderRC + eduLevel + employment, data = dat)
-lifeFitAffect <- lm(affectiveValence ~ meanLifeFit*playtime2wk + age + genderRC + eduLevel + employment, data = dat)
-lifeFitPromis <- lm(meanPromis ~ meanLifeFit*playtime2wk + age + genderRC + eduLevel + employment, data = dat)
-lifeFitWemwbs <- lm(meanWemwbs ~ meanLifeFit*playtime2wk + age + genderRC + eduLevel + employment, data = dat)
+lifeFitCsas <- lm(csas ~ meanLifeFit * playtime2wk + age + genderRC + eduLevel + employment, data = dat)
+lifeFitAffect <- lm(affectiveValence ~ meanLifeFit * playtime2wk + age + genderRC + eduLevel + employment, data = dat)
+lifeFitPromis <- lm(meanPromis ~ meanLifeFit * playtime2wk + age + genderRC + eduLevel + employment, data = dat)
+lifeFitWemwbs <- lm(meanWemwbs ~ meanLifeFit * playtime2wk + age + genderRC + eduLevel + employment, data = dat)
 
 preds <- rbind(
   plot_predictions(lifeFitCsas, condition = "meanLifeFit", draw = FALSE) |> mutate(model = "Life Satisfaction") |> rename(wb = csas),
@@ -773,14 +792,18 @@ preds <- rbind(
 
 ggplot(preds, aes(x = meanLifeFit, y = estimate)) +
   geom_point(
-    data = dat |> pivot_longer(cols = c(affectiveValence, meanPromis, meanWemwbs, csas), 
-                               names_to = "model", values_to = "wellbeing") |> 
-      mutate(model = recode(model, 
-                                "affectiveValence" = "Affective",
-                                "csas" = "Life Satisfaction",
-                                "meanPromis" = "Depressive Symptoms",
-                                "meanWemwbs" = "General Mental Well-being")), 
-    aes(x = meanLifeFit, y = wellbeing, group = model), alpha = .1) +
+    data = dat |> pivot_longer(
+      cols = c(affectiveValence, meanPromis, meanWemwbs, csas),
+      names_to = "model", values_to = "wellbeing"
+    ) |>
+      mutate(model = recode(model,
+        "affectiveValence" = "Affective",
+        "csas" = "Life Satisfaction",
+        "meanPromis" = "Depressive Symptoms",
+        "meanWemwbs" = "General Mental Well-being"
+      )),
+    aes(x = meanLifeFit, y = wellbeing, group = model), alpha = .1
+  ) +
   geom_line(color = "darkgreen", linewidth = 1.5) +
   geom_ribbon(
     aes(ymin = conf.low, ymax = conf.high),
@@ -788,10 +811,9 @@ ggplot(preds, aes(x = meanLifeFit, y = estimate)) +
     alpha = .2,
     # fill = "darkred"
   ) +
-  facet_wrap(~ model, scales = "free_y") +
+  facet_wrap(~model, scales = "free_y") +
   labs(x = "Mean Gaming Life Fit", y = "Wellbeing (1-5 Scale)") +
   mytheme
-
 ```
 
 Next, we conducted exploratory analyses to investigate what other factors might influence who exhibits positive or negative relations between gaming and well-being. We explored age, gender, and life fit---the perceived harmful or beneficial value of gaming in various life domains. We expected that people who perceive gaming to support other life domains would exhibit a more positive relationship between gaming and mental health, and those who perceived gaming to be harmful to other life domains would exhibit a more negative relationship.
@@ -808,80 +830,99 @@ However, we did find a direct relationship between greater life fit and greater 
 
 # Here we explore potential non-linearity in the relationships between playtime and mental health by e.g. comparing a generalized additive model of well-being with and without a smooth term for playtime, and comparing AIC between these.
 
-nonlinearity <- dat |> 
-  select(affectiveValence, meanPromis, meanWemwbs, csas, contains("playtime")) |> 
-  pivot_longer(matches("playtime\\d"), names_to = "window", values_to = "playtime") |> 
-  pivot_longer(cols = c(affectiveValence, meanPromis, meanWemwbs, csas), 
-               names_to = "measure", values_to = "wellbeing") |>
-  group_by(measure, window) |> 
-  nest() |> 
-  mutate(
-    linear = map(data, ~gam(wellbeing ~ playtime, data = .x)),
-    smooth = map(data, ~gam(wellbeing ~ s(playtime, k = 5), data = .x))
+nonlinearity <- dat |>
+  select(affectiveValence, meanPromis, meanWemwbs, csas, contains("playtime")) |>
+  pivot_longer(matches("playtime\\d"), names_to = "window", values_to = "playtime") |>
+  pivot_longer(
+    cols = c(affectiveValence, meanPromis, meanWemwbs, csas),
+    names_to = "measure", values_to = "wellbeing"
   ) |>
-  pivot_longer(linear:smooth, names_to = "Model") |> 
-  mutate(AIC = map_dbl(value, AIC)) |> 
-  select(-value) |> 
-  pivot_wider(names_from = Model, values_from = AIC) |> 
-  mutate(Difference = linear-smooth)
-
+  group_by(measure, window) |>
+  nest() |>
+  mutate(
+    linear = map(data, ~ gam(wellbeing ~ playtime, data = .x)),
+    smooth = map(data, ~ gam(wellbeing ~ s(playtime, k = 5), data = .x))
+  ) |>
+  pivot_longer(linear:smooth, names_to = "Model") |>
+  mutate(AIC = map_dbl(value, AIC)) |>
+  select(-value) |>
+  pivot_wider(names_from = Model, values_from = AIC) |>
+  mutate(Difference = linear - smooth)
 ```
 
 ```{r}
 #| label: sensitivity-duration
 #| include: false
 
-nintendoModels <- expand.grid(predictor = dat |> select(matches("playtimeNintendo\\d")) |> names(),
-                      outcome = c("csas","affectiveValence","meanWemwbs","meanPromis")) |> 
+nintendoModels <- expand.grid(
+  predictor = dat |> select(matches("playtimeNintendo\\d")) |> names(),
+  outcome = c("csas", "affectiveValence", "meanWemwbs", "meanPromis")
+) |>
   mutate(formula = paste0(outcome, " ~ ", predictor, " + age + genderRC"))
 
 nintendoFits <- map_df(
-  models$formula, ~lm(as.formula(.x), 
-                      data = dat) |> 
-    broom::tidy(conf.int = TRUE, conf.level = .99) |> 
+  models$formula, ~ lm(as.formula(.x),
+    data = dat
+  ) |>
+    broom::tidy(conf.int = TRUE, conf.level = .99) |>
     filter(grepl("play", term))
-) |> 
-  mutate(predictor = nintendoModels$predictor,
-         outcome = nintendoModels$outcome) |> 
+) |>
+  mutate(
+    predictor = nintendoModels$predictor,
+    outcome = nintendoModels$outcome
+  ) |>
   select(predictor, outcome, everything())
 
-nintendoFits |> 
+nintendoFits |>
   mutate(
     model = paste0(outcome, " ~ ", predictor),
     predictor = fct_rev(fct_recode(predictor, !!!nintendoDict)),
     outcome = fct_recode(outcome,
-                         "Life Satisfaction" = "csas",
-                         "Affect" = "affectiveValence",
-                         "Depressive Symptoms" = "meanPromis",
-                         "General well-being" = "meanWemwbs")
-  ) |> 
+      "Life Satisfaction" = "csas",
+      "Affect" = "affectiveValence",
+      "Depressive Symptoms" = "meanPromis",
+      "General well-being" = "meanWemwbs"
+    )
+  ) |>
   ggplot(
-    aes(y = predictor,
-        fill = predictor,
-        xdist = dist_normal(estimate, std.error))
+    aes(
+      y = predictor,
+      fill = predictor,
+      xdist = dist_normal(estimate, std.error)
+    )
   ) +
   geom_vline(xintercept = 0, color = "grey") +
-  stat_halfeye(position = position_dodge(.5), # distance between slabs within a group
-               normalize = "groups",
-               .width = .99, # width of pointrange conf int
-               scale = .7) + # height of density plots
+  stat_halfeye(
+    position = position_dodge(.5), # distance between slabs within a group
+    normalize = "groups",
+    .width = .99, # width of pointrange conf int
+    scale = .7
+  ) + # height of density plots
   geom_vline(xintercept = -.06, linetype = "dashed") +
   geom_vline(xintercept = .06, linetype = "dashed") +
   scale_x_continuous(limits = c(-.5, .5), breaks = seq(-.5, .5, .1)) +
   scale_fill_viridis_d(option = "magma", begin = .8, end = .4) +
-  labs(x = "Difference in well-being (1-5 scale)\nAssociated with 1 Additional Hour of Daily Playtime",
-       y = "Playtime Window") +
-  geom_text(aes(x = -.25,
-                label = str_glue("{number(estimate, .01)} [{number(conf.low, .01)}, {number(conf.high, .01)}]")),
-            vjust = -.3,
-            size = 3,
-            hjust = 1,
-            position = position_dodge(.5)) +
+  labs(
+    x = "Difference in well-being (1-5 scale)\nAssociated with 1 Additional Hour of Daily Playtime",
+    y = "Playtime Window"
+  ) +
+  geom_text(
+    aes(
+      x = -.25,
+      label = str_glue("{number(estimate, .01)} [{number(conf.low, .01)}, {number(conf.high, .01)}]")
+    ),
+    vjust = -.3,
+    size = 3,
+    hjust = 1,
+    position = position_dodge(.5)
+  ) +
   annotate(x = -.06, y = +Inf, label = "SESOI", vjust = 2, geom = "label") +
   annotate(x = .06, y = +Inf, label = "SESOI", vjust = 2, geom = "label") +
   mytheme +
-  theme(legend.position = "none",
-        axis.text.y = element_text(hjust = 1)) +
+  theme(
+    legend.position = "none",
+    axis.text.y = element_text(hjust = 1)
+  ) +
   facet_wrap(~outcome)
 ```
 
@@ -889,19 +930,24 @@ nintendoFits |>
 #| label: sensitivity-binaryplay
 #| include: false
 
-binaryModels <- expand.grid(predictor1 = dat |> select(matches("played\\d")) |> names(),
-                      outcome = c("csas","affectiveValence","meanWemwbs","meanPromis")) |> 
-  mutate(predictor2 = rep(dat |> select(matches("playtime\\d")) |> names(), times = 4)) |> 
+binaryModels <- expand.grid(
+  predictor1 = dat |> select(matches("played\\d")) |> names(),
+  outcome = c("csas", "affectiveValence", "meanWemwbs", "meanPromis")
+) |>
+  mutate(predictor2 = rep(dat |> select(matches("playtime\\d")) |> names(), times = 4)) |>
   mutate(formula = str_glue("{outcome} ~ {predictor1} + sqrt({predictor2}) + age + genderRC + eduLevel + employment"))
 
 binaryFits <- map_df(
-  binaryModels$formula, ~lm(as.formula(.x), 
-                      data = dat) |> 
-    broom::tidy(conf.int = TRUE, conf.level = .99) |> 
+  binaryModels$formula, ~ lm(as.formula(.x),
+    data = dat
+  ) |>
+    broom::tidy(conf.int = TRUE, conf.level = .99) |>
     filter(grepl("play", term))
-) |> 
-  mutate(predictor = rep(binaryModels$predictor1, each = 2),
-         outcome = rep(binaryModels$outcome, each = 2)) |>
+) |>
+  mutate(
+    predictor = rep(binaryModels$predictor1, each = 2),
+    outcome = rep(binaryModels$outcome, each = 2)
+  ) |>
   select(predictor, outcome, everything())
 ```
 
@@ -953,29 +999,33 @@ There are three limitations and constraints on generalizability the merit mentio
 
 metadata <- read_csv("data/gameMetadata.csv.gz")
 
-games <- datRaw |> 
-  filter(!(pid %in% c(clockHackers, nonPlayers))) |> 
-  group_by(titleID) |> 
-  summarise(totalPlay = sum(duration, na.rm = TRUE)) |> 
-  left_join(metadata, by = c("titleID" = "NoAname")) |> 
-  group_by(gameID) |> 
-  arrange(desc(totalPlay)) |> 
-  slice(1) |> 
-  arrange(desc(totalPlay)) |> 
+games <- datRaw |>
+  filter(!(pid %in% c(clockHackers, nonPlayers))) |>
+  group_by(titleID) |>
+  summarise(totalPlay = sum(duration, na.rm = TRUE)) |>
+  left_join(metadata, by = c("titleID" = "NoAname")) |>
+  group_by(gameID) |>
+  arrange(desc(totalPlay)) |>
+  slice(1) |>
+  arrange(desc(totalPlay)) |>
   ungroup()
 
-genres <- games |> 
-  separate_rows(genres, sep = ",") |> 
+genres <- games |>
+  separate_rows(genres, sep = ",") |>
   mutate(presence = TRUE) |> # placeholder
-  pivot_wider(names_from = genres, values_from = presence, values_fill = list(presence = FALSE)) |> 
-  summarise(across(c(`Role-playing (RPG)`:MOBA), 
-                   list(
-                     prop_games = ~ mean(.x),
-                     prop_time = ~ sum(.x * totalPlay) / sum(games$totalPlay)),
-                   .names = "{.col}_{.fn}")) |> 
-  pivot_longer(cols = everything(), 
-               names_to = c("genre", ".value"), 
-               names_sep = "_prop_")
+  pivot_wider(names_from = genres, values_from = presence, values_fill = list(presence = FALSE)) |>
+  summarise(across(c(`Role-playing (RPG)`:MOBA),
+    list(
+      prop_games = ~ mean(.x),
+      prop_time = ~ sum(.x * totalPlay) / sum(games$totalPlay)
+    ),
+    .names = "{.col}_{.fn}"
+  )) |>
+  pivot_longer(
+    cols = everything(),
+    names_to = c("genre", ".value"),
+    names_sep = "_prop_"
+  )
 
 
 table(games$rating_ESRB)
