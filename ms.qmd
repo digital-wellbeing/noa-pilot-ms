@@ -9,12 +9,12 @@ author:
     affiliations:
       - name: University of Oxford
         department: Oxford Internet Institute
-    roles:
-      - conceptualization
-      - data curation
-      - methodology
-      - formal analysis
-      - writing
+    # roles:
+    #   - conceptualization
+    #   - data curation
+    #   - methodology
+    #   - formal analysis
+    #   - writing
       
   - name: Matti Vuorre
     corresponding: false
@@ -23,11 +23,11 @@ author:
       - name: Tilburg University
       - name: University of Oxford
         department: Oxford Internet Institute
-    roles:
-      - methodology
-      - funding acquisition
-      - formal analysis
-      - editing
+    # roles:
+    #   - methodology
+    #   - funding acquisition
+    #   - formal analysis
+    #   - editing
       
   - name: Thomas Hakman
     corresponding: false
@@ -36,10 +36,10 @@ author:
     affiliations:
       - name: University of Oxford
         department: Oxford Internet Institute
-    roles:
-      - data curation
-      - validation
-      - editing
+    # roles:
+    #   - data curation
+    #   - validation
+    #   - editing
       
   - name: Kristoffer Magnusson
     corresponding: false
@@ -48,9 +48,9 @@ author:
       - name: Karolinska Institute
       - name: University of Oxford
         department: Oxford Internet Institute
-    roles:
-      - methodology
-      - editing
+    # roles:
+    #   - methodology
+    #   - editing
       
   - name: Andrew K Przybylski
     corresponding: true
@@ -59,11 +59,11 @@ author:
     affiliations:
       - name: University of Oxford
         department: Oxford Internet Institute
-    roles:
-      - conceptualization
-      - funding acquisition
-      - project administration
-      - editing
+    # roles:
+    #   - conceptualization
+    #   - funding acquisition
+    #   - project administration
+    #   - editing
 abstract: "Studies on video games and well-being often rely on self-report measures or data from a single game. Here, we study how 704 US adults' time spent playing over 150 1st-party Nintendo Switch games (totaling 140k hours) relates to their life satisfaction, affect, depressive symptoms, and general mental well-being. We replicate previous findings that playtime over the past 2 weeks does not predict well-being, and extend these findings to a wider range of timescales (1 hour to 1 year). Results suggest that relationships, if present, dissipate within 2 hours of gameplay. Our non-causal findings suggest substantial confounding would be needed to shift a meaningful true effect to the observed null. Although playtime was not related to well-being, players’ assessments of the value of game time—so called gaming life fit—was. Results emphasize the importance of defining the gaming population of interest, collecting data from more than one game, and focusing on how players integrate gaming into their lives rather than the amount of time spent."
 keywords: [video games, digital trace data, well-being]
 author-note:
@@ -71,11 +71,11 @@ author-note:
   disclosures:
     study-registration: This study was registered on the Open Science Framework (https://osf.io/sjqyt).
     # Acknowledge and cite data/materials to be shared.
-    data-sharing: Data and materials are available at XXXXX. 
+    data-sharing: Data and materials are available at https://osf.io/6xkdg/. 
     # Example: [Author name] has been a paid consultant for Corporation X, which funded this study.
     conflict-of-interest: Data for this study was provided by Nintendo of America. Nintendo of America had no role in the design of the study, the analysis of the data, or decision to publish any results. The authors declare no other competing interests. 
     # Example: This study was supported by Grant [Grant Number] from [Funding Source].
-    financial-support: ~ This research was supported by Huo Family Foundation and the UK Economic and Social Research Council (ESRC) (ES/W012626/1). KM was supported by Forskningsrå det för hälsa, arbetsliv och välfärd (2021-01284).
+    financial-support: This research was supported by Huo Family Foundation and the UK Economic and Social Research Council (ES/W012626/1). KM was supported by Forskningsrå det för hälsa, arbetsliv och välfärd (2021-01284).
     # Example: The authors are grateful to [Person] for [Reason].
     gratitude: ~
     # Example. Because the authors are equal contributors, order of authorship was determined by a fair coin toss.
@@ -84,8 +84,11 @@ bibliography: references.bib
 floatsintext: true # If true, tables and figures are mingled with the text instead of listed at the end of the document.
 numbered-lines: false # Numbered lines (.pdf and .docx only)
 meta-analysis: false
+suppress-credit-statement: true
 format:
   apaquarto-docx: default
+    # blank-lines-above-author-note: 0
+    # blank-lines-above-title: 1
   # apaquarto-html:
   #   documentmode: man
   #   code-fold: true
@@ -134,10 +137,10 @@ options(scipen = 999)
 ```{r}
 #| label: load-data
 
-datSurveyRaw <- read_csv(paste0(Sys.getenv("DATA_PATH"), "survey.csv.gz"))
-datRaw <- read_csv(paste0(Sys.getenv("DATA_PATH"), "telemetry.csv.gz")) |> 
+datSurveyRaw <- read_csv("data/survey.csv.gz")
+datRaw <- read_csv("data/telemetry.csv.gz") |> 
   left_join(datSurveyRaw, by = "pid")
-datDemo <- read_csv(paste0(Sys.getenv("DATA_PATH"), "demographics.csv.gz"))
+datDemo <- read_csv("data/demographics.csv.gz")
 
 ```
 
@@ -227,9 +230,20 @@ An important frontier for the field, therefore, is to collect holistic digital t
 
 ## Present Study
 
+```{r}
+#| label: fig-sankey
+#| fig-align: center
+#| out-width: "80%"
+#| fig-cap: "Participant flow, from recruitment to final sample"
+#| apa-twocolumn: true
+
+knitr::include_graphics("figures/sankey.png")
+```
+
+
 In the present research we report on a study conducted in collaboration with Nintendo of America, in which we independently recruited a large sample of adult video game players, surveyed them about their motivation and well-being, and joined these responses to digital trace data on Nintendo Switch video game play. Our central aim was to test the extent to which the amount of time participants spent playing related to their psychological well-being. Our analysis plan was preregistered at <https://osf.io/sjqyt>.
 
-More specifically, our first hypothesis was to test whether the null relations reported in earlier work [@JohannesEtAl2021video; @VuorreEtAl2022Time; @BallouEtAl2024Registered] would replicate in an independent sample of play across the Nintendo platform. In our first hypothesis, we predicted that there will be no practically significant association between video game playtime in the previous 2 weeks and life satisfaction (H1a), affective valence (H1b), depressive symptoms (H1c), or general mental well-being (H1d).
+More specifically, our first hypothesis was to test whether the null relations reported in earlier work [@JohannesEtAl2021video; @VuorreEtAl2022Time; @BallouEtAl2024Registered] would replicate in an independent sample of Nintendo Switch play. In our first hypothesis, we predicted that there will be no practically significant association between video game playtime in the previous 2 weeks and life satisfaction (H1a), affect (H1b), depressive symptoms (H1c), or general mental well-being (H1d).
 
 We were also interested in understanding how relationships between play and well-being might depend on the choice of what time scale of play is considered relevant. To this end, we examined relationships between well-being and a wide range of time windows of play preceding the well-being question. While preregistered, the large number of models implicated in our analysis plan is prohibitively large to be aptly framed as a narrow hypothesis test. We therefore operationalize this as an exploratory research question: How does the relationship between playtime and well-being differ across different gaming observation windows ranging from 1 hour to 1 year?
 
@@ -315,28 +329,13 @@ datAll <- datRaw |>
 
 datAll <- datAll |> 
   
-  ## Calculate well-being variables
-  mutate(
-    genderRC = ifelse(gender %in% c("Man","Woman",NA), gender, "Non-binary"),
-    across(starts_with(c("wemwbs","promis","trojan","bangs","displacement")), ~case_when(
-      . %in% c("Greatly interfered") ~ -3,
-      . %in% c("Moderately interfered") ~ -2,
-      . %in% c("Slightly interfered") ~ -1,
-      . %in% c("No impact") ~ 0,
-      . %in% c("1 - None of the time","Never","1 - Strongly disagree","1 \nStrongly Disagree","Slightly supported","1") ~ 1,
-      . %in% c("2 - Rarely","Rarely","Moderately supported","2") ~ 2,
-      . %in% c("3 - Some of the time","Sometimes","Greatly supported","3") ~ 3,
-      . %in% c("4 - Often","Often","4Neither Agree nor Disagree","4") ~ 4,
-      . %in% c("5 - All of the time","Always","5 - Strongly agree","5") ~ 5,
-      . %in% c("6") ~ 6,
-      . %in% c("7 Strongly agree") ~ 7,
-      TRUE ~ NA_integer_))
-  ) |> 
+  mutate(genderRC = ifelse(gender %in% c("Man","Woman",NA), gender, "Non-binary")) |> 
   rowwise() |> 
   mutate(
     meanWemwbs = mean(c_across(starts_with("wemwbs"))),
     meanPromis = mean(c_across(starts_with("promis"))),
-    meanLifeFit = mean(c_across(starts_with("displacement")))
+    meanLifeFit = mean(c_across(starts_with("displacement"))),
+    meanBPS = mean(c_across(starts_with("bps"))),
   ) |> 
   ungroup() |> 
   mutate(
@@ -402,17 +401,6 @@ numCareless <- table(datAll$possibleCareless)[2]
 
 # Method
 
-```{r}
-#| label: fig-sankey
-#| fig-align: center
-#| fig-width: 8
-#| fig-height: 6
-#| fig-cap: "Participant flow, from recruitment to final sample"
-#| apa-twocolumn: true
-
-knitr::include_graphics("figures/sankey.png")
-```
-
 ## Design and Recruitment
 
 Our participant flow is shown in @fig-sankey. We recruited participants from Prolific, a participant recruitment platform, who were: (1) 18 years old, (2) proficient in English, (3) residents of the US, and (4) active video game players (self-defined, based on a \>0 response to Prolific's built-in screening item "How many hours per week do you play video games on average?"). We first distributed a screening questionnaire to 7649 participants asking which video game platforms they were active on; of these, 4184 indicated that they played games on Nintendo Switch.
@@ -424,8 +412,6 @@ Of the participants who completed the linking process, 1607 had eligible Nintend
 As preregistered, we excluded 427 individuals who had 0 minutes of playtime during the previous 3 months, indicating that they are not active Nintendo players, and 26 people who logged more than 24 hours of playtime on any single day or who had a session that took place in the future, indicating a technical problem or manipulation of the system clock for in-game benefits. We further excluded 34 participants who displayed signs of careless responding (e.g., so-called straightlining or seemingly random responses). In total, we excluded 487 participants (some participants were excluded on multiple grounds), leading to a final sample of `r nrow(dat)`.
 
 Participants were paid £0.15 for the 1-minute screening questionnaire, £3 for linking their data (\~5 minutes) plus a £2 bonus payment if data was successfully retrieved, and £4 for a 22-minute well-being survey. This study received approval from the University of Oxford Social Sciences and Humanities Interdivisional Research Ethics Committee (OII_C1A_23_107).
-
-## Participants and Exclusions
 
 ```{r}
 #| label: tbl-demographics
@@ -471,7 +457,10 @@ dat |>
   padding(padding = 0, part = "all")  # Adjust padding
 ```
 
+## Participants and Exclusions
+
 Participant demographics are shown in @tbl-demographics. 
+
 
 ## Measures
 
@@ -485,7 +474,7 @@ Participants completed a self-report survey that took on average 22 minutes to c
 
 **Life satisfaction** was measured with the one-item Cantril self-anchoring scale [@Cantril1965pattern]. Participants were prompted with ‘Please imagine a ladder with steps numbered from 0 at the bottom to 10 at the top. The top of the ladder represents the best possible life for you, and the bottom of the ladder represents the worst possible life for you. On which step of the ladder would you say you personally feel you stood over the past two weeks?’. Participants responded on a scale from 0 to 10, which was rescaled to 1-5 to match the other well-being measures.
 
-**Affective valence** was measured with a single item: "How are you feeling right now?" [@KillingsworthGilbert2010Wandering]. Participants responded using a 100-point visual analogue scale (VAS) with endpoints "Very bad" and "Very good", which we rescaled to 1-5 to match the other well-being measures.
+**Affect** was measured with a single item: "How are you feeling right now?" [@KillingsworthGilbert2010Wandering]. Participants responded using a 100-point visual analogue scale (VAS) with endpoints "Very bad" and "Very good", which we rescaled to 1-5 to match the other well-being measures.
 
 **Gaming life fit** was measured with a draft measure asking players to rate the contribution of gaming to 5 life domains (work/school, social participation, cognitive health, emotion regulation, and daily routines) on a 7-pt bipolar scale from "greatly interfered" to "greatly supported". We took the average of these to generate a formative indicator of the degree to which players perceive their gaming to be beneficial or harmful to other aspects of their lives. This measure has not been used or validated before, and we return to this in the discussion.
 
@@ -526,7 +515,7 @@ quantile(dat$playtime2wk, probs = seq(.1, .9, by = .1), na.rm = TRUE)
 #| label: fig-playtime
 #| fig-cap: "Description of playtime in the sample. Panel A shows the distribution of playtime across players for each observation period, with the mean shown in red; observations periods below the dashed line are shown as total hours, whereas periods above the dashed line reflect hours of player per day. Panel B shows the proportion of players who logged at least one play session in that period."
 #| fig-width: 8
-#| fig-height: 6
+#| fig-height: 4
 #| fig-align: center
 #| fig-pos: "t"
 #| apa-twocolumn: true
@@ -608,8 +597,8 @@ performance::check_model(h1wemwbs)
 ```{r}
 #| label: fig-scatter
 #| fig-cap: Scatterplots depicting the relationship between video game playtime during the previous 2 weeks (mean minutes of play per day) and four types of well-being.
-#| fig-width: 8
-#| fig-height: 6
+#| fig-width: 6
+#| fig-height: 4.5
 #| fig-align: center
 #| fig-pos: "t"
 #| apa-twocolumn: true
@@ -667,8 +656,8 @@ fittedModels <- map_df(
 ```{r}
 #| label: fig-ests
 #| fig-cap: Estimates for the relationship between playtime and well-being across various timescales, shown with 90% (dark blue) and 99% (light blue) confidence intervals. Dashed lines represent the positive and negative smallest effect size of interest (SESOI) of .06. 
-#| fig-width: 8
-#| fig-height: 6
+#| fig-width: 6
+#| fig-height: 4.5
 #| fig-align: center
 #| fig-pos: "t"
 #| apa-twocolumn: true
@@ -764,8 +753,8 @@ moderationEsts <- moderationFits |>
 ```{r}
 #| label: fig-lifefit
 #| fig-cap: Marginal relationship between gaming life fit (perceived harmful or beneficial effects of games for oneself) and wellbeing 
-#| fig-width: 8
-#| fig-height: 6
+#| fig-width: 6
+#| fig-height: 4.5
 #| fig-align: center
 #| fig-pos: "t"
 #| apa-twocolumn: true
@@ -777,7 +766,7 @@ lifeFitWemwbs <- lm(meanWemwbs ~ meanLifeFit*playtime2wk + age + genderRC + eduL
 
 preds <- rbind(
   plot_predictions(lifeFitCsas, condition = "meanLifeFit", draw = FALSE) |> mutate(model = "Life Satisfaction") |> rename(wb = csas),
-  plot_predictions(lifeFitAffect, condition = "meanLifeFit", draw = FALSE) |> mutate(model = "Affective Valence") |> rename(wb = affectiveValence),
+  plot_predictions(lifeFitAffect, condition = "meanLifeFit", draw = FALSE) |> mutate(model = "Affective") |> rename(wb = affectiveValence),
   plot_predictions(lifeFitPromis, condition = "meanLifeFit", draw = FALSE) |> mutate(model = "Depressive Symptoms") |> rename(wb = meanPromis),
   plot_predictions(lifeFitWemwbs, condition = "meanLifeFit", draw = FALSE) |> mutate(model = "General Mental Well-being") |> rename(wb = meanWemwbs)
 )
@@ -787,7 +776,7 @@ ggplot(preds, aes(x = meanLifeFit, y = estimate)) +
     data = dat |> pivot_longer(cols = c(affectiveValence, meanPromis, meanWemwbs, csas), 
                                names_to = "model", values_to = "wellbeing") |> 
       mutate(model = recode(model, 
-                                "affectiveValence" = "Affective Valence",
+                                "affectiveValence" = "Affective",
                                 "csas" = "Life Satisfaction",
                                 "meanPromis" = "Depressive Symptoms",
                                 "meanWemwbs" = "General Mental Well-being")), 
@@ -916,7 +905,7 @@ binaryFits <- map_df(
   select(predictor, outcome, everything())
 ```
 
-We performed various sensitivity checks to ensure the robustness of our findings (see supplementary materials for full detail). First, we explored potential non-linearity in the relationships between playtime and mental health by comparing a generalized additive model of well-being with and without a smooth term for playtime, and comparing AIC between these. Of the 48 possible models (4 well-being variables \* 12 playtime windows), just 1 of these (playtime in the previous 1 year and life satisfaction) showed a difference in AIC of more than 2, indicating that nearly all relationships were adequately captured by linear terms. Next, we reran the analyses using session durations as calculated by Nintendo, as opposed to the implied duration based on the start and end timestamps; Nintendo's durations differ from the implied duration in approximately 10% of sessions, reflecting certain unknown heuristics used by Nintendo to calculate playtime (based e.g., on idle time, time spent in menus, and so on). Data show a similar pattern: no models showed a significant relationship between playtime and well-being at our specified alpha of .01. Next, we explored alternative models wherein playtime was separated into both a binary variable (1 if the player had any time logged in that period, 0 if not), and a continuous variable (how much a person played). Results were comparable; although three models indicated that among those who played in the previous 1-2 weeks, longer play is associated with higher affect and general mental well-being, the remaining 93 playtime variables were neither significant or nor within both equivalence bounds.
+We performed various sensitivity checks to ensure the robustness of our findings (see supplementary materials for full detail). First, we explored potential non-linearity in the relationships between playtime and mental health by comparing a generalized additive model of well-being with and without a smooth term for playtime, and comparing AIC between these. Of the 48 possible models (4 well-being variables \* 12 playtime windows), just 1 of these (playtime in the previous 1 year and life satisfaction) showed a difference in AIC of more than 2, indicating that nearly all relationships were adequately captured by linear terms. Next, we reran the analyses using session durations as calculated by Nintendo, as opposed to the implied duration based on the start and end timestamps; Nintendo’s durations are shorter than the implied duration in approximately 10% of sessions due to internal methodology. Data show a similar pattern: no models showed a significant relationship between playtime and well-being at our specified alpha of .01. Next, we explored alternative models wherein playtime was separated into both a binary variable (1 if the player had any time logged in that period, 0 if not), and a continuous variable (how much a person played). Results were comparable; although three models indicated that among those who played in the previous 1-2 weeks, longer play is associated with higher affect and general mental well-being, the remaining 93 playtime variables were neither significant or nor within both equivalence bounds.
 
 # Discussion
 
@@ -962,7 +951,7 @@ There are three limitations and constraints on generalizability the merit mentio
 #| label: game-metadata
 #| eval: false
 
-metadata <- read_csv(paste0(Sys.getenv("DATA_PATH"), "gameMetadata.csv.gz"))
+metadata <- read_csv("data/gameMetadata.csv.gz")
 
 games <- datRaw |> 
   filter(!(pid %in% c(clockHackers, nonPlayers))) |> 
@@ -996,6 +985,10 @@ table(games$genres)
 ## Conclusion
 
 The idea that time spent playing is the key ingredient in how games impact well-being will be with us for some time. Although our study was not designed to test a causal link, it challenges the notion that simply playing more affects well-being, for better or for worse. The correlations we observed were mostly too small to practically matter. Moreover, we show that large confounding would be required to suppress a true causal effect to produce the null associations we observed. This is improbable but not impossible, and we believe our results lend weight to calls for scholars and health practitioners to embrace the gradual shift of focus towards quality, rather than quantity of video game play as the key factor for player health. If this can be done while simultaneously improving data quality and access, a coherent and evidence-based method for studying the complex relationships linking video game play and well-being will be possible.
+
+# Contributions
+
+Author roles were classified using the Contributor Role Taxonomy (CRediT;https://credit.niso.org/) as follows: Nick Ballou: conceptualization, data curation, methodology, formal analysis, writing; Matti Vuorre: methodology, funding acquisition, formal analysis, editing; Thomas Hakman: data curation, validation, editing; Kristoffer Magnusson: methodology, editing; Andrew K Przybylski: conceptualization,funding acquisition, project administration, editing
 
 # References
 

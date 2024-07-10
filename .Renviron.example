@@ -1,4 +1,0 @@
-# Modify as appropriate below and rename to .Renviron
-
-# OneDrive directory containing all NoA data files, ending in "noa-cross-sectional"
-DATA_PATH=""
