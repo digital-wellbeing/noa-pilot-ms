@@ -86,7 +86,7 @@ numbered-lines: false # Numbered lines (.pdf and .docx only)
 meta-analysis: false
 suppress-credit-statement: true
 format:
-  apaquarto-docx: default
+  # apaquarto-docx: default
     # blank-lines-above-author-note: 0
     # blank-lines-above-title: 1
   # apaquarto-html:
@@ -94,8 +94,8 @@ format:
   #   code-fold: true
   #   code-summary: "Show the code"
   #   wordcount-html: default
-  # apaquarto-pdf:
-  #   documentmode: jou
+  apaquarto-pdf:
+    documentmode: jou
 ---
 
 ```{r}
