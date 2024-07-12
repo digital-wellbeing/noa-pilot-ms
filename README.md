@@ -2,7 +2,7 @@
 
 This repository contains the data, materials, and code for our manuscript "Perceived value of video games, but not hours played, predicts mental well-being in adult Nintendo players".
 
-- preprint: <...>
+- Preprint: <https://osf.io/preprints/psyarxiv/3srcw?view_only=>
 - [This repository](https://github.com/digital-wellbeing/noa-pilot-ms) contains the data and code described in our manuscript.
 
 Authors:
