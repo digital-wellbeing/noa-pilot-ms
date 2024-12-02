@@ -2,7 +2,7 @@
 
 This repository contains the data, materials, and code for our manuscript "Perceived value of video games, but not hours played, predicts mental well-being in adult Nintendo players".
 
-- preprint: <...>
+- preprint: [https://osf.io/preprints/psyarxiv/3srcw/](https://osf.io/preprints/psyarxiv/3srcw/)
 - [This repository](https://github.com/digital-wellbeing/noa-pilot-ms) contains the data and code described in our manuscript.
 
 Authors:
@@ -13,9 +13,21 @@ Authors:
 - Kristoffer Magnusson
 - Andrew K. Przybylski
 
-## Data 
+## Materials and Questionnaire Items
 
-The data is documented at <https://osf.io/6xkdg/>.
+The codebook describing all datatables and questionnaire items can be found in `materials/codebook.xlsx`. 
+
+## Data
+
+Data itself can be found in `data/`, in compressed `.csv.gz` files. In total, this includes 5 kinds of data:
+
+- **Demographic data** on all screened participants (`demographics.csv.gz`)
+- **Self-report data** from surveys (`survey.csv.gz`)
+- V**ideo game behavior data** in the form of Nintendo Switch session records (`telemetry.csv.gz`)
+- **Cognitive task data** (`osf/`)
+- **Game Metadata**, scraped from [IGDB.org](IGDB.org) so as to understand feature-level characteristics of the games people played. 
+
+
 
 ## Reproduce
 

@@ -1,5 +1,5 @@
 ---
-title: "Perceived value of video games, but not hours played, predicts mental well-being in adult Nintendo players"
+title: "Perceived value of video games, but not hours played, predicts mental well-being in causal adult Nintendo players"
 shorttitle: "Nintendo gaming and well-being"
 author:
   - name: Nick Ballou
@@ -64,7 +64,7 @@ author:
     #   - funding acquisition
     #   - project administration
     #   - editing
-abstract: "Studies on video games and well-being often rely on self-report measures or data from a single game. Here, we study how 703 US adults' time spent playing over 150 1st-party Nintendo Switch games (totaling 140k hours) relates to their life satisfaction, affect, depressive symptoms, and general mental well-being. We replicate previous findings that playtime over the past 2 weeks does not predict well-being, and extend these findings to a wider range of timescales (1 hour to 1 year). Results suggest that relationships, if present, dissipate within 2 hours of gameplay. Our non-causal findings suggest substantial confounding would be needed to shift a meaningful true effect to the observed null. Although playtime was not related to well-being, players’ assessments of the value of game time—so called gaming life fit—was. Results emphasize the importance of defining the gaming population of interest, collecting data from more than one game, and focusing on how players integrate gaming into their lives rather than the amount of time spent."
+abstract: "Studies on video games and well-being often rely on self-report measures or data from a single game. Here, we study how 703 casually-engaged US adults’ time spent playing for over 140,000 hours across 150 Nintendo Switch games relates to their life satisfaction, affect, depressive symptoms, and general mental well-being. We replicate previous findings that playtime over the past two weeks does not predict well-being, and extend these findings to a wider range of timescales (one hour to one year). Equivalence tests were inconclusive, and thus we do not find evidence of absence, but results suggest that relationships, if present and practically meaningful, likely dissipate within two hours of gameplay. Our non-causal findings suggest substantial confounding would be needed to shift a meaningful true effect to the observed null. Although playtime was not related to well-being, players’ assessments of the value of game time—so called gaming life fit—was. Results emphasise the importance of defining the gaming population of interest, collecting data from more than one game, and focusing on how players integrate gaming into their lives rather than the amount of time spent."
 keywords: [video games, digital trace data, well-being]
 author-note:
   # Disclosures condensed to one paragraph, but you can start a field with two line breaks to break them up: \n\nNew Paragraph
@@ -82,13 +82,11 @@ author-note:
     authorship-agreements: ~
 bibliography: references.bib
 floatsintext: true # If true, tables and figures are mingled with the text instead of listed at the end of the document.
-numbered-lines: false # Numbered lines (.pdf and .docx only)
+numbered-lines: true # Numbered lines (.pdf and .docx only)
 meta-analysis: false
 suppress-credit-statement: true
 format:
-  # apaquarto-docx: default
-    # blank-lines-above-author-note: 0
-    # blank-lines-above-title: 1
+  apaquarto-docx: default
   # apaquarto-html:
   #   documentmode: man
   #   code-fold: true
@@ -111,25 +109,12 @@ knitr::opts_chunk$set(
 
 ```{r}
 #| label: load-libraries
+if (!require("pacman")) install.packages("pacman")
+library(pacman)
 
-library(tidyverse)
-library(lubridate)
-library(knitr)
-library(kableExtra)
-library(dtplyr)
-library(scales)
-library(ggdist)
-library(distributional)
-library(mgcv)
-library(patchwork)
-library(see)
-library(performance)
-library(careless)
-library(cowplot)
-library(marginaleffects)
-library(flextable)
-library(ggstance)
-library(crosstable)
+p_load(tidyverse, lubridate, knitr, kableExtra, dtplyr, scales, ggdist, distributional, mgcv,
+       patchwork, see, performance, careless, cowplot, marginaleffects, flextable, ggstance, crosstable,
+       lavaan, glue)
 
 options(scipen = 999)
 ```
@@ -214,40 +199,39 @@ playedDict <- c(
 )
 ```
 
-Video games played on smartphones, computers, or home consoles are now a widely pursued form of leisure that involves social interaction, creativity, problem-solving, and growth [@BourgonjonEtAl2016Players]. Major firms like Nintendo have sold hundreds of millions of games consoles in recent years [@NintendoJapan2024Top] and online platforms like Steam typically have more than 30 million players online at any given time [@SteamCharts2024SteamCharts]. This staggering investment of human capital has inspired both national [@AmericanPsychiatricAssociation2013diagnostic] and international [@WorldHealthOrganization2018international] health bodies to focus on play as contributor to psychopathology.
+Video games played on smartphones, computers, or home consoles are now a widely pursued form of leisure that involves social interaction, creativity, problem-solving, and growth [@BourgonjonEtAl2016Players]. Major firms like Nintendo have sold hundreds of millions of games consoles in recent years [@NintendoJapan2024Top] and online platforms such as Steam regularly attract upwards of 30 million players online at any given time [@SteamCharts2024SteamCharts]. This staggering investment of human attention and behaviour has inspired both national [@AmericanPsychiatricAssociation2013diagnostic] and international [@WorldHealthOrganization2018international] health bodies to focus on play as potential contributor to psychopathology.
 
 The extent to which games might be understood as behaviorally addictive remains hotly debated [@AarsethEtAl2017scholars; @VanRooijEtAl2018weak; @BillieuxEtAl2017functional] and the broader scientific conversation has increasingly focused on how not just quantity, but also quality of play relates to player health. Although there is increasing recognition that not all screentime—or in the case of games, playtime—is created equal [@Orben2022Digital], it remains a major research focus. Research has identified a range of factors that co-determine how time spent with games relates to health: for example, aspects of a game’s design such as its social affordances [@CrenshawNardi2016It], the context of when and where one plays [@DrummondSauer2020Timesplitters], and players’ motivation [@BruhlmannEtAl2020Motivational].
 
-In matters of health policy, overall time spent with games—regardless of what or why one plays—remains central to how games are thought to influence player outcomes. Parental control tools on platforms like Xbox and PlayStation foreground time limits as a primary means of enforcing healthy gaming behavior [@Robertson2021Taming]; for adults, a growing array of self-control tools, apps, and dashboards offer the ability to "limit or cut yourself off from apps and games" ([https://focusme.com](https://focusme.com/how-it-works/)), savings users "1.23 hours" (<https://www.opal.so>) or "up to 2.5 hours a day" ([https://freedom.to/](https://freedom.to/freedom-for-ios)). News media suggest time-based limits [e.g., @Saveva2023Healthy], often referencing the since-abandoned 2x2 rule from the American Academy of Pediatrics: no screen time for children under 2, and no more than 2 hours per day for children older than 2 [@Blum-RossLivingstone2018Trouble]. Likewise, the American Psychiatric Association’s description of Internet Gaming Disorder characterizes pathological engagement with games, in part, as involving ‘8-10 hours or more per day \[and or\] least 30 hours per week’ [@AmericanPsychiatricAssociation2013diagnostic, p. 796]. On a larger scale, time-based limits such as Korea’s 10-year Youth Protection Revision Act prohibited young people from playing games between 00:00 and 06:00 [@SangEtAl2017Mobile]. More recently, China put in place a three-hour weekly limit for under-18s [@FeinerKharpal2021China]. The effectiveness of such regulatory steps has been challenged [@zendle2023; @ChoiEtAl2018Effect].
+In matters of health policy, overall time spent with games—regardless of what or why one plays—remains central to how games are thought to influence player outcomes. Parental control tools on platforms like Xbox and PlayStation foreground time limits as a primary means of enforcing healthy gaming behavior [@Robertson2021Taming]; for adults, a growing array of self-control tools, apps, and dashboards offer the ability to "limit or cut yourself off from apps and games" ([https://focusme.com](https://focusme.com/how-it-works/)), savings users "1.23 hours" (<https://www.opal.so>) or "up to 2.5 hours a day" ([https://freedom.to/](https://freedom.to/freedom-for-ios)). News media suggest time-based limits [e.g., @Saveva2023Healthy], often referencing the since-abandoned 2x2 rule from the American Academy of Pediatrics: no screen time for children under two, and no more than two hours per day for children older than two [@Blum-RossLivingstone2018Trouble]. Likewise, the American Psychiatric Association’s description of Internet Gaming Disorder characterises pathological engagement with games, in part, as involving ‘8-10 hours or more per day \[and or\] least 30 hours per week’ [@AmericanPsychiatricAssociation2013diagnostic, p. 796]. On a larger scale, time-based limits such as Korea’s 10-year Youth Protection Revision Act prohibited young people from playing games between 00:00 and 06:00 [@SangEtAl2017Mobile]. More recently, China put in place a weekly three-hour limit for under-18s [@FeinerKharpal2021China]. The effectiveness of such regulatory steps has been challenged [@zendle2023; @ChoiEtAl2018Effect].
 
 A better understanding of how time spent with games relates to players’ health, for good or ill, is needed. Given that play takes many forms and happens across many different games, researchers greatly benefit from access to digital trace data—histories of user actions generated when interacting with technologies such as a game or online platform. Digital trace data can provide much greater detail about what, when, and how much people play than is possible in self-report data, which consistently shows substantial discrepancies compared to digital trace data collected by online platforms [@ErnalaEtAl2020How] and independent researchers [@ParryEtAl2021systematic] alike. Previous studies on games found that an additional hour of *Animal Crossing: New Horizons* trace data predicted just a 30-minute increase in self-reported play—a nearly 50% discrepancy [@JohannesEtAl2021video]---and that *Everquest 2* players' estimates correlated only r = .37 with logged estimates, with underestimates slightly more common than overestimates [@kahn2014].
 
-Only a handful of studies have applied digital trace data to the study of games and well-being \[ @VuorreEtAl2022Time; @JohannesEtAl2021video; @BruhlmannEtAl2020Motivational; @LarrieuEtAl2023How\], in part because this data can be very difficult to acquire: researchers must build or rely on (often unstable) technical systems to log data themselves, or negotiate individual agreements with games companies who have historically been reluctant to share data [@Ballou2023Manifesto; @SeifEl-NasrEtAl2013game]. Where digital trace data has been collected, however, results have been informative. @BruhlmannEtAl2020Motivational used playtime and in-game behavior to identify subgroups of *League of Legends* players who had more negative in-game experiences. @JohannesEtAl2021video look at playtime in *Animal Crossing: New Horizons* and *PvZ: Battle for Neighborville* and found a positive but likely negligible correlation. A follow-up study expanded this to 7 games, finding that changes in playtime over the course of 6 weeks were unlikely to affect subsequent well-being [@VuorreEtAl2022Time]. @LarrieuEtAl2023How follow high-intensity *Rainbow 6: Siege* players and find no link between playtime and quality of life across any identified player types.
+Only a handful of studies have applied digital trace data to the study of games and well-being [see @VuorreEtAl2022Time; @JohannesEtAl2021video; @BruhlmannEtAl2020Motivational; @LarrieuEtAl2023How], in part because this data can be very difficult to acquire: researchers must build or rely on unstable technical systems to log data themselves, or negotiate individual agreements with games companies who have historically been reluctant to share data [@Ballou2023Manifesto; @SeifEl-NasrEtAl2013game]. Where digital trace data has been collected, however, results have been informative. @BruhlmannEtAl2020Motivational used playtime and in-game behavior to identify subgroups of *League of Legends* players who had more negative in-game experiences. @JohannesEtAl2021video look at playtime in *Animal Crossing: New Horizons* and *PvZ: Battle for Neighborville* and found a positive but likely negligible correlation. A follow-up study expanded this to seven games, finding that changes in playtime over the course of 6 weeks were unlikely to affect subsequent well-being [@VuorreEtAl2022Time]. @LarrieuEtAl2023How follow high-intensity *Rainbow 6: Siege* players and find no link between playtime and quality of life across any identified player types.
 
-Though informative, this early work has a vital scope limitation: digital trace data was only available for a single game per player. It was not possible to know what other games a participant was, or was not, electing to play. Players regularly switch between games over the course of a day or week based on mood, available time, and social context [@ONeillEtAl2016Condensing; @BallouEtAl2024Registered]; data collected for one particular game may thus tell us little about *overall* playtime or its relation to well-being.
+Though informative, this early work has a vital scope limitation: digital trace data was only available for a single game for each player-participant. It was not possible to know what other games a participant was, or was not, electing to play. Players regularly switch between games over the course of a day or week based on mood, available time, and social context [@ONeillEtAl2016Condensing; @BallouEtAl2024Registered]; data collected for one particular game may thus tell us little about *overall* playtime or its relation to well-being.
 
-An important frontier for the field, therefore, is to collect holistic digital trace data that reflects behavior in not just one game, but all games played (which may include various games on one platform, such as Nintendo Switch or Steam, or all games played across several platforms a player uses). At present, our understanding of even basic phenomena such as the true volume of play in different demographics rely on the same inaccurate self-report data, itself often provided by market research firms using opaque methodologies. Capturing play at the platform level represents one step towards this goal of studying a player's complete gaming diet. To our knowledge, the only study to platform-level digital trace data to investigate player health is [@BallouEtAl2024Registered], which found no meaningful relationships between Xbox playtime and well-being over 3 months.
+An important frontier for the field, therefore, is to collect holistic digital trace data that reflects behavior in not just one game, but all games played (which may include various games on one platform, such as Nintendo Switch or Steam, or all games played across several platforms a player uses). At present, our understanding of even basic phenomena such as the true volume of play in different demographics rely on the same inaccurate self-report data, itself often provided by market research firms using opaque methodologies. Capturing play at the platform level represents one step towards this goal of studying a player's complete gaming diet. To our knowledge, the only study to investigate player health with platform-level digital trace data is [@BallouEtAl2024Registered], which found no meaningful relationships between Xbox playtime and well-being over three months. The current study complements this earlier work by investigating how well-being relates to play on an alternative platform, Nintendo Switch, which has a more causal audience and a distinct library of games, and by analyzing a longer window of play behavior spanning up to one year.
 
 ## Present Study
 
 ```{r}
 #| label: fig-sankey
 #| fig-align: center
-#| out-width: "80%"
+#| out-width: "100%"
 #| fig-cap: "Participant flow, from recruitment to final sample"
 #| apa-twocolumn: true
 
-knitr::include_graphics("figures/sankey.png")
+knitr::include_graphics("tables-figures/sankey.png")
 ```
 
-
-In the present research we report on a study conducted in collaboration with Nintendo of America, in which we independently recruited a large sample of adult video game players, surveyed them about their motivation and well-being, and joined these responses to digital trace data on Nintendo Switch video game play. Our central aim was to test the extent to which the amount of time participants spent playing related to their psychological well-being. Our analysis plan was preregistered at <https://osf.io/sjqyt>.
+In the present research we report on a study in which we independently recruited a large sample of adult video game players, surveyed them about their motivation and well-being, and joined these responses to digital trace data on Nintendo Switch video game play, which was provided via a data-sharing agreement with Nintendo of America. Our central aim was to test the extent to which the amount of time participants spent playing related to their psychological well-being. Our analysis plan was preregistered at <https://osf.io/sjqyt>.
 
 More specifically, our first hypothesis was to test whether the null relations reported in earlier work [@JohannesEtAl2021video; @VuorreEtAl2022Time; @BallouEtAl2024Registered] would replicate in an independent sample of Nintendo Switch play. In our first hypothesis, we predicted that there will be no practically significant association between video game playtime in the previous 2 weeks and life satisfaction (H1a), affect (H1b), depressive symptoms (H1c), or general mental well-being (H1d).
 
-We were also interested in understanding how relationships between play and well-being might depend on the choice of what time scale of play is considered relevant. To this end, we examined relationships between well-being and a wide range of time windows of play preceding the well-being question. While preregistered, the large number of models implicated in our analysis plan is prohibitively large to be aptly framed as a narrow hypothesis test. We therefore operationalize this as an exploratory research question: How does the relationship between playtime and well-being differ across different gaming observation windows ranging from 1 hour to 1 year?
+We were also interested in understanding how relationships between play and well-being might depend on the choice of what timescale of play researchers consider relevant to investigate. To this end, we examined relationships between well-being and a wide range of time windows of play preceding the well-being question. While preregistered, the large number of models implicated in our analysis plan is prohibitively large to be aptly framed as a narrow hypothesis test. We therefore operationalise this as an exploratory research question: How does the relationship between playtime and well-being differ across different gaming observation windows ranging from one hour to one year?
 
-Lastly, we investigated what factors might moderate the relationship between playtime and well-being. To test this exploratory question, we assessed potential moderation by gender, age, as well as a subjective sense of how players thought gaming had positive or negative relationships to various life domains such as work, relationships, school performance, and social health.
+Lastly, we investigated what factors might moderate the relationship between playtime and well-being. To test this exploratory question, we assessed potential moderation by participant gender and age, as well as a subjective sense of how players thought gaming had positive or negative relationships to various life domains such as work, relationships, school performance, and social health.
 
 ```{r}
 #| label: calculate-playtime
@@ -394,7 +378,7 @@ dat <- datAll |>
   filter(!pid %in% nonPlayers) |>
   filter(!pid %in% clockHackers) |>
   filter(possibleCareless %in% c(FALSE, NA)) |>
-  select(-starts_with(c("wemwbs", "bangs", "trojan", "promis", "timeUse", "recent", "weird")), -c(positives, problematicPlay, feedback))
+  select(-starts_with(c("bangs", "trojan", "timeUse", "recent", "weird")), -c(positives, problematicPlay, feedback))
 
 numCareless <- table(datAll$possibleCareless)[2]
 ```
@@ -403,15 +387,15 @@ numCareless <- table(datAll$possibleCareless)[2]
 
 ## Design and Recruitment
 
-Our participant flow is shown in @fig-sankey. We recruited participants from Prolific, a participant recruitment platform, who were: (1) 18 years old, (2) proficient in English, (3) residents of the US, and (4) active video game players (self-defined, based on a \>0 response to Prolific's built-in screening item "How many hours per week do you play video games on average?"). We first distributed a screening questionnaire to 7649 participants asking which video game platforms they were active on; of these, 4184 indicated that they played games on Nintendo Switch.
+Our participant flow is shown in @fig-sankey. We recruited participants from Prolific, a participant recruitment platform, who were: (1) at least 18 years old, (2) proficient in English, (3) residents of the US, and (4) active video game players (self-defined, based on a \>0 response to Prolific's built-in screening item "How many hours per week do you play video games on average?"). We first distributed a screening questionnaire to 7649 participants asking which video game platforms they were active on; of these, 4184 indicated that they played games on Nintendo Switch. Participants who played on Nintendo Switch were active on 1.8 additional platforms on average (e.g., also using Playstation and iOS); their Nintendo playtime therefore captures only an (unknown) portion of their overall gaming activity. We return to this limitation in the Discussion. 
 
-We invited these participants to a second survey wherein they retrieved an account identifier from the Nintendo web interface (the events QR code, available at <https://accounts.nintendo.com/qrcode>), and shared it with us. This identifier is separate from their username, and cannot be used by anyone besides Nintendo (including ourselves) to link the player to personally identifiable information. A total of 1823 participants completed the linking process. We sent the account identifiers to Nintendo of America, who in turn sent us each player's pseudonymized play history from May 1, 2022 to present. Data collection began with a pilot study of 100 participants on Nov 15, 2023, which was combined with primary data collection from Feb 12, 2024 to May 6, 2024.
+We invited these participants to a second survey wherein they retrieved an account identifier from the Nintendo web interface using the events QR code, available at <https://accounts.nintendo.com/qrcode>, and they shared these unique identifiers with us. This identifier is separate from their username, and cannot be used by anyone besides Nintendo---including our research team---to link the player to personally identifiable information. A total of 1823 participants completed the linking process. We sent the account identifiers to Nintendo of America, who in turn sent us each player's pseudonymised play history from May 1, 2022 to present. Data collection began with a pilot study of 100 participants on Nov 15, 2023, which was combined with primary data collection from Feb 12, 2024 to May 6, 2024.
 
-Of the participants who completed the linking process, 1607 had eligible Nintendo data (i.e., any play sessions of a 1st party game—a game published by Nintendo or one of its subsidiaries, as opposed to a third-party publisher—from May 1, 2022 to present). These 1607 were subsequently sent a well-being survey in Qualtrics (see Measures below). 1191 participants completed the well-being survey; our preregistered stopping rule went into effect when 5 or fewer participants per day completed the survey for 3 consecutive days.
+Of the participants who completed the linking process, 1607 had eligible Nintendo data (i.e., any play sessions of a 1st party game—a game published by Nintendo or one of its subsidiaries, as opposed to a third-party publisher—from May 1, 2022 to present). These 1607 were subsequently sent a well-being survey in Qualtrics detailed below. 1191 participants completed the well-being survey; our preregistered stopping rule went into effect when 5 or fewer participants per day completed the survey for three consecutive days.
 
-As preregistered, we excluded 427 individuals who had 0 minutes of playtime during the previous 3 months, indicating that they are not active Nintendo players, and 26 people who logged more than 24 hours of playtime on any single day or who had a session that took place in the future, indicating a technical problem or manipulation of the system clock for in-game benefits. We further excluded 34 participants who displayed signs of careless responding (e.g., so-called straightlining or seemingly random responses). In total, we excluded 487 participants (some participants were excluded on multiple grounds), leading to a final sample of `r nrow(dat)`.
+As preregistered, we excluded 427 individuals who had no playtime during the previous three months, indicating that they are not active Nintendo players, and 26 people who logged more than 24 hours of playtime on any single day or who had a session that took place in the future, indicating a technical problem or manipulation of the system clock for in-game benefits. We further excluded 34 participants who displayed signs of careless responding (e.g., so-called straightlining or seemingly random responses). In total, we excluded 487 participants (some participants were excluded on multiple grounds), leading to a final sample of `r nrow(dat)`.
 
-Participants were paid £0.15 for the 1-minute screening questionnaire, £3 for linking their data (\~5 minutes) plus a £2 bonus payment if data was successfully retrieved, and £4 for a 22-minute well-being survey. This study received approval from the University of Oxford Social Sciences and Humanities Interdivisional Research Ethics Committee (OII_C1A_23_107).
+Participants were paid £0.15 for the 1-minute screening questionnaire, £3 for linking their data plus a £2 bonus payment if data was successfully retrieved, and £4 for a 22-minute well-being survey. This study received approval from the University of Oxford Social Sciences and Humanities Interdivisional Research Ethics Committee (OII_C1A_23_107).
 
 ```{r}
 #| label: tbl-demographics
@@ -464,42 +448,41 @@ dat |>
 
 ## Participants and Exclusions
 
-Participant demographics are shown in @tbl-demographics. 
-
+Participant demographics are shown in @tbl-demographics.
 
 ## Measures
 
-Participants completed a self-report survey that took on average 22 minutes to complete. The survey included background factors such as demographics and life circumstances, a series of cognitive tasks, as well as self-report measures of time use, and motivations for video game play. We detail those measures we used in this study below but all study data are available at OSF (see supplementary materials).
+Participants completed a self-report survey that took on average 22 minutes to complete. The survey included background factors such as demographics and life circumstances, a series of cognitive tasks, as well as self-report measures of time use, and motivations for video game play. In this paper, we focus on the playtime data and the self-reported well-being measures, and detail only those measures below. Other measures were intended for exploratory analyses beyond the scope of the current paper. All study data and materials are available on the OSF (see supplementary materials).
 
-**Video game playtime** was measured by collecting a record of each player's individual game sessions for all 1st party video games played on a Nintendo Switch. These data were provided by Nintendo of America. Playtime was calculated by summing the duration of all (partial) sessions that occur during a given time period relative to the participant's survey response, based on the logged session start and end times. For ease of interpretation, game play time in all observation periods longer 24 hours is reported as mean minutes of play per day. It is important to note that these data included only telemetry for games published by Nintendo and its close business partners (e.g. The Pokémon Company), but not games made by third party publishers (e.g. Electronic Arts). Nintendo-published games accounted for 63% of all playtime across our sample; the 37% of play data from 3rd-party games is therefore treated as missing. We return to this limitation in the discussion.
+**Video game playtime** was measured by collecting a record of each player's individual game sessions for all 1st party video games played on a Nintendo Switch. These data were provided by Nintendo of America. Playtime was calculated by summing the duration of all (partial) sessions that occur during a given time period relative to the participant's survey response, based on the logged session start and end times. For ease of interpretation, playtime in all observation periods longer than 24 hours is reported as mean minutes of play per day. It is important to note that these data included only digital trace data for games published by Nintendo and its close business partners (e.g. The Pokémon Company), but not games made by third party publishers (e.g. Electronic Arts). Nintendo-published games accounted for 63% of all playtime across our sample; the 37% of play data from 3rd-party games is therefore treated as missing. We return to this limitation in the discussion.
 
 **General mental well-being** was measured with the WEMWBS [@TennantEtAl2007warwickedinburgh]. Players rated 14 statements about how they felt during the past 2 weeks such as "I’ve been dealing with problems well" and "I’ve been feeling good about myself" on a 5-point scale from 1 ("none of the time") to 5 ("all of the time"). Scores were calculated by taking the mean of all items.
 
 **Depressive symptoms** was measured with the PROMIS Short Form 8a [@PilkonisEtAl2011item]. Players rated 8 statements about how they felt in the past 7 days such as "I felt hopeless" and "I felt I had nothing to look forward to" on a 5-point scale from 1 ("never") to 5 ("always"). Scores were calculated by taking the mean of all items.
 
-**Life satisfaction** was measured with the one-item Cantril self-anchoring scale [@Cantril1965pattern]. Participants were prompted with ‘Please imagine a ladder with steps numbered from 0 at the bottom to 10 at the top. The top of the ladder represents the best possible life for you, and the bottom of the ladder represents the worst possible life for you. On which step of the ladder would you say you personally feel you stood over the past two weeks?’. Participants responded on a scale from 0 to 10, which was rescaled to 1-5 to match the other well-being measures.
+**Life satisfaction** was measured with the one-item Cantril self-anchoring scale [@Cantril1965pattern]. Participants were prompted with ‘Please imagine a ladder with steps numbered from 0 at the bottom to 10 at the top. The top of the ladder represents the best possible life for you, and the bottom of the ladder represents the worst possible life for you. On which step of the ladder would you say you personally feel you stood over the past two weeks?’. Participants responded on a scale from 0 to 10, which was rescaled to continuous values between 1-5 to match the range of WEMWBS and PROMIS measures.
 
-**Affect** was measured with a single item: "How are you feeling right now?" [@KillingsworthGilbert2010Wandering]. Participants responded using a 100-point visual analogue scale (VAS) with endpoints "Very bad" and "Very good", which we rescaled to 1-5 to match the other well-being measures.
+**Affect** was measured with a single item: "How are you feeling right now?" [@KillingsworthGilbert2010Wandering]. Participants responded using a 100-point visual analogue scale (VAS) with endpoints "Very bad" and "Very good", which we rescaled to continuous values between 1-5 to match the WEMWBS and PROMIS measures.
 
 **Gaming life fit** was measured with a draft measure asking players to rate the contribution of gaming to 5 life domains (work/school, social participation, cognitive health, emotion regulation, and daily routines) on a 7-pt bipolar scale from "greatly interfered" to "greatly supported". We took the average of these to generate a formative indicator of the degree to which players perceive their gaming to be beneficial or harmful to other aspects of their lives. This measure has not been used or validated before, and we return to this in the discussion.
 
 ## Analytic Approach
 
-To test H1, we fit multiple regression models with playtime over the previous 2 weeks as the primary predictor, all demographic variables as covariates (age, gender, highest level of education, and employment status), and the corresponding mental health variable as the outcome. For example, for H1a (life satisfaction predicted by the previous 2 weeks of play), the model in R is:
+To test H1, we fit multiple regression models with playtime over the previous 2 weeks as the primary predictor, all demographic variables as covariates (age, gender, highest level of education, and employment status), and the corresponding mental health variable as the outcome. For example, for H1a (life satisfaction predicted by the previous 2 weeks of play), the model in R was:
 
 {{lm((life satisfaction) \~ (playtime in the previous 2 weeks) + age + gender + education + employment)}}
 
-We apply a similar analysis approach to our exploration of H2 concerning other timescales; we primarily apply multiple regression with well-being predicted by playtime aggregated over various time periods and the same covariates, but also explore potential non-linear alternatives and moderation analyses (detailed below).
+We applied a similar analysis approach to our exploration of H2 concerning other timescales; we primarily applied multiple regression with well-being predicted by playtime aggregated over various time periods and the same covariates, but also explored potential non-linear alternatives and moderation analyses (detailed below).
 
-We interpret the playtime coefficient estimates from these models in reference to pre-specified smallest effect sizes of interest (see below): if the 99% confidence interval is fully within the upper and lower equivalence bounds, this provides evidence to reject a practically meaningful association.
+We interpreted the playtime coefficient estimates from these models in reference to pre-specified smallest effect sizes of interest (see below): if the 99% confidence interval is fully within the upper and lower equivalence bounds, this provides evidence to reject a practically meaningful association.
 
-We conducted all statistical analyses with R version 4.3.2 [@RCoreTeam2023language]. We use an alpha of .01.
+We conducted all statistical analyses with R version 4.3.2 [@RCoreTeam2023language]. We used an alpha of .01.
 
 ## Smallest Effect Size of Interest
 
 We specify the smallest effect size of interest (SESOI) as a 1-hour change in (daily) playtime associated with a .06 scale point change in mental health on a 1–5 scale, in line with @BallouEtAl2024Registered, who justified that value based on previous research on minimally important differences (approximately .3–.4 scale points on a 1–5 scale for PROMIS and WEMWBS measures) and daily leisure time available to US adults (approximately 5 hours; @SturmCohen2019Free). Any association smaller than .06 indicates that the average person does not have enough time in the day to modulate their play to an extent that it would register a perceptible difference in their well-being.
 
-Note: this method of specifying an SESOI is predicated on a causal interpretation—it implicitly imagines a world where one can intervene on the predictor (playtime) and have an effect of a certain size on the outcome (mental health). It is very unlikely that our cross-sectional analyses can provide unbiased causal estimates. Instead, our goal is to use associations to place boundaries on the size of a possible effect: if there is no meaningful correlation between playtime and mental health, there is even less likely to be a meaningful causal effect between playtime and mental health. We support this reasoning with simulations presented in the discussion.
+Note: this method of specifying an SESOI is predicated on a causal interpretation—it implicitly imagines a world where one can intervene on playtime (our predictor) and have an effect of a certain size on mental health (our outcomes). It is very unlikely that our cross-sectional analyses can provide unbiased causal estimates. Instead, our goal is to use associations to place boundaries on the size of a possible effect. In other words, if there is no meaningful correlation between playtime and mental health, there is even less likely to be a meaningful causal effect between playtime and mental health. We support this reasoning with simulations presented in the discussion.
 
 # Results
 
@@ -518,12 +501,31 @@ quantile(dat$playtime2wk, probs = seq(.1, .9, by = .1), na.rm = TRUE)
 
 ```{r}
 #| label: fig-playtime
-#| fig-cap: "Description of playtime in the sample. Panel A shows the distribution of playtime across players for each observation period, with the mean shown in red; observations periods below the dashed line are shown as total hours, whereas periods above the dashed line reflect hours of player per day. Panel B shows the proportion of players who logged at least one play session in that period."
+#| fig-cap: "Description of playtime in the sample. Panel A shows the distribution of playtime across players for each observation period, with the mean shown in red; observation periods below the dashed line are shown as total hours, whereas periods above the dashed line reflect hours of player per day. Panel B shows the proportion of players who logged at least one play session in that period. Raw descriptive statistics are available in the supplementary materials (tables-figures/playtimeDescriptives.csv)."
 #| fig-width: 8
 #| fig-height: 4
 #| fig-align: center
 #| fig-pos: "t"
 #| apa-twocolumn: true
+
+playtimeTable <- dat |> 
+  select(matches("playtime\\d")) |> 
+  summarise(across(
+    everything(),
+    list(`Mean hours (per day)` = ~ mean(.x, na.rm = TRUE),
+         SD = ~ sd(.x, na.rm = TRUE),
+         `Median hours (per day)` = ~ median(.x, na.rm = TRUE))
+  )) |> 
+  pivot_longer(cols = everything(),
+               names_to = c("Variable", ".value"),
+               names_sep = "_") |> 
+  mutate(
+    Variable = fct_rev(fct_recode(Variable, !!!playtimeDict)),
+    Variable = glue("Playtime ({Variable})")
+  ) |> 
+  mutate(across(where(is.numeric), ~ round(., 3)))
+
+# write_csv(playtimeTable, "tables-figures/playtimeDescriptives.csv")
 
 p1 <- dat |>
   select(pid, matches("playtime\\d")) |>
@@ -569,9 +571,9 @@ p2 <- dat |>
 (p1 | p2) + plot_layout(axes = "collect") + plot_annotation(tag_level = "A")
 ```
 
-Given the lack of holistic or platform-level data available in the literature, our first goal was to simply describe the volume of play. This is visualized in @fig-playtime, which show that despite a total play volume of more than 140k hours, our sample was largely minimally engaged with 1st party Nintendo games. During the 2 weeks prior to survey completion, just over half of the sample had 0 sessions logged. The top 10% of players were moderately engaged, playing an average of 60 minutes per day. Sessions of a game lasted on average `r round(median(datRaw$duration, na.rm = T), 1)` minutes \[10th percentile: `r quantile(datRaw$duration, .1)`; 90th percentile: `r quantile(datRaw$duration, .9)`\].
+Given the lack of holistic or platform-level data available in the literature, our first goal was to simply describe the volume of play. This is visualised in @fig-playtime, which show that despite a total play volume of more than 140k hours, our sample was largely minimally engaged with 1st party Nintendo games. During the two weeks prior to survey completion, just over half of the sample had no sessions logged. The top 10% of players were moderately engaged, playing an average of 60 minutes per day. Sessions of a game lasted on average `r round(median(datRaw$duration, na.rm = T), 1)` minutes \[10th percentile: `r quantile(datRaw$duration, .1)`; 90th percentile: `r quantile(datRaw$duration, .9)`\].
 
-The results of this study are therefore reflective of a largely casual population of players—at least with respect to Nintendo titles. We argue that this population is nonetheless an important one: if video games were to meaningfully affect well-being, we may expect a larger impact for people who rarely play but happen to play for 1 hour, than for a highly engaged population of people who tend to play 3 hours per day, but happen to play 4 hours. We return to this limitation on generalizability in the discussion.
+The results of this study are therefore reflective of a largely casual population of players—at least with respect to Nintendo titles. We argue that this population is nonetheless an important one to study alongside the ongoing research focused on so-called hardcore players: if video games were to meaningfully affect well-being, we may expect a larger impact for people who rarely play but happen to play for one hour, than for a highly engaged population of people who tend to play three hours per day, but happen to play four hours. We return to this limitation on generalizability in the discussion.
 
 ## H1: Previous 2 weeks of playtime and mental health
 
@@ -643,7 +645,7 @@ However, due to lower than expected response rates and total volume of playtime,
 ## H2: Exploration of other playtime windows
 
 ```{r}
-#| label: model-fitting
+#| label: various-time-models
 
 models <- expand.grid(
   predictor = dat |> select(matches("playtime\\d")) |> names(),
@@ -720,16 +722,19 @@ fittedModels |>
   theme(
     # axis.title.y = element_text(angle = 0, vjust = .5),
     panel.grid.minor = element_blank(),
-    panel.grid.major = element_line(linewidth = .1)
+    panel.grid.major = element_line(linewidth = .1),
+    axis.text.x = element_text(size = 8, angle = 30, hjust = 1),
   ) +
   geom_hline(yintercept = .06, linetype = "dashed", linewidth = .3, color = "black") +
   geom_hline(yintercept = -.06, linetype = "dashed", linewidth = .3, color = "black") +
   facet_wrap(~outcome, scales = "free_y")
 ```
 
-Next, we conducted exploratory analyses to understand if the relationship between playtime and well-being varies across different playtime periods (@fig-ests). Broadly, results align with the results of H1---in all models, 99% CIs overlapped 0, but due to low precision no estimate was fully within the equivalence bounds. We therefore do not find evidence for a meaningful relationship between playtime and well-being at any timescale, but cannot rule out the possibility of one existing.
+Next, we conducted exploratory analyses to understand if the relationship between playtime and well-being varies across different playtime periods (@fig-ests). This also ensured that at least one model related playtime to wellbeing on a corresponding timescale (e.g., the previous 2 weeks for general mental well-being, and the previous 1 week for depressive symptomatology and and life satisfaction). 
 
-Estimates are especially uncertain for observation periods of 6 hours or less, as few participants played Nintendo shortly before completing a survey. However, there is a trend towards stronger relationships among more recent observation periods: based on the point estimates, playtime within the previous 1--2 hours is more strongly correlated with well-being than medium- and longer-term time periods. In each case, playtime shortly before completing a survey was associated with higher affect, life satisfaction, and general mental well-being; and with lower levels of self-reported depressive symptoms.
+Broadly, results align with the results of H1---in all models, 99% CIs overlapped 0, but due to low precision no estimate was fully within the equivalence bounds. We therefore do not find evidence for a meaningful relationship between playtime and well-being at any timescale, but cannot rule out the possibility of one existing.
+
+Estimates are especially uncertain for observation periods of six hours or less, as only 30 participants had played Nintendo games shortly before completing the survey. However, there is a trend towards stronger relationships among more recent observation periods: based on the point estimates, playtime within the previous 1--2 hours is more strongly correlated with well-being than medium- and longer-term time periods. In each case, playtime shortly before completing a survey was associated with higher affect, life satisfaction, and general mental well-being; and with lower self-reported levels of depressive symptoms.
 
 ## Exploratory analysis: Moderation by life fit
 
@@ -816,11 +821,58 @@ ggplot(preds, aes(x = meanLifeFit, y = estimate)) +
   mytheme
 ```
 
-Next, we conducted exploratory analyses to investigate what other factors might influence who exhibits positive or negative relations between gaming and well-being. We explored age, gender, and life fit---the perceived harmful or beneficial value of gaming in various life domains. We expected that people who perceive gaming to support other life domains would exhibit a more positive relationship between gaming and mental health, and those who perceived gaming to be harmful to other life domains would exhibit a more negative relationship.
+```{r}
+#| label: sensitivity-needsat
+#| include: false
+
+datNS <- dat |> 
+  mutate(
+    as = (bpnsfs_1 + bpnsfs_7 + bpnsfs_13 + bpnsfs_19)/4,
+    af = (bpnsfs_2 + bpnsfs_8 + bpnsfs_14 + bpnsfs_20)/4,
+    cs = (bpnsfs_3 + bpnsfs_9 + bpnsfs_15 + bpnsfs_21)/4,
+    cf = (bpnsfs_4 + bpnsfs_10 + bpnsfs_16 + bpnsfs_22)/4,
+    rs = (bpnsfs_5 + bpnsfs_11 + bpnsfs_17 + bpnsfs_23)/4,
+    rf = (bpnsfs_6 + bpnsfs_12 + bpnsfs_18 + bpnsfs_24)/4,
+    ns = (as + cs + rs)/3,
+    nf = (af + cf + rf)/3
+  )
+
+NSmodels <- expand.grid(
+  predictor = dat |> select(matches("playtime\\d")) |> names(),
+  outcome = c("csas", "affectiveValence", "meanWemwbs", "meanPromis")
+) |>
+  mutate(formula = paste0(outcome, " ~ ", predictor, " + meanLifeFit + ns + nf + age + genderRC + eduLevel + employment"))
+
+fittedNSModels <- map_df(
+  NSmodels$formula, ~ lm(as.formula(.x),
+    data = datNS
+  ) |>
+    broom::tidy(conf.int = TRUE, conf.level = .99) |>
+    filter(grepl("meanLifeFit", term))
+) |>
+  mutate(
+    predictor = NSmodels$predictor,
+    outcome = NSmodels$outcome
+  ) |>
+  select(predictor, outcome, everything())
+
+nsMod <- lm(ns ~ meanLifeFit + age + genderRC + eduLevel + employment, data = datNS) |> 
+  broom::tidy(conf.int = TRUE) |> 
+  filter(term == "meanLifeFit") |> 
+  mutate(pretty = str_glue("{number(estimate, .01)} 95% CI [{number(conf.low, .01)}, {number(conf.high, .01)}]"))
+
+nfMod <- lm(nf ~ meanLifeFit + age + genderRC + eduLevel + employment, data = datNS) |> 
+  broom::tidy(conf.int = TRUE) |> 
+  filter(term == "meanLifeFit") |> 
+  mutate(pretty = str_glue("{number(estimate, .01)} 95% CI [{number(conf.low, .01)}, {number(conf.high, .01)}]"))
+
+```
+
+Next, we conducted exploratory analyses to investigate what other factors might influence who exhibits positive or negative relations between gaming and well-being. We explored age, gender, and life fit---the perceived harmful or beneficial value of gaming across various life domains outside of play. We expected that people who perceive gaming as supportive in other life domains would show positive relations between gaming and mental health, and those who perceived gaming to be harmful to other life domains would show negative ones.
 
 To test this, we reran the models from H2, adding `playtime * age`, `playtime * gender`, and `playtime * lifeFit` moderation terms. We did not find evidence to support the presence of moderation; none of the moderation terms were significant (`r min(moderationEsts$p.value)` \< ps \< `r max(moderationEsts$p.value)`).
 
-However, we did find a direct relationship between greater life fit and greater well-being separate from playtime (@fig-lifefit): People who believe gaming to be more beneficial to their lives tend to also report higher well-being, regardless of how much they play. Across 48 models, we observed relationships between well-being and a 1 point change in life fit ranging from `r min(directEsts$estimate)` to `r max(directEsts$estimate)` (median = `r round(median(directEsts$estimate), 3)`; all ps \< .001).
+However, we did find evidence of direct positive relationships linking life fit to well-being separate from playtime (@fig-lifefit): Those who believe gaming to be beneficial to their lives tend to are also more likely to report higher levels of well-being, regardless of how much they play. Across 48 models, we observed relationships between well-being and a 1 point change in life fit ranging from `r min(directEsts$estimate)` to `r max(directEsts$estimate)` (median = `r round(median(directEsts$estimate), 3)`; all ps \< .001). In sensitivity analyses, life fit was both a significant predictor of daily life need satisfaction (`r nsMod$pretty`) and frustration (`r nfMod$pretty`), and largely remained a significant predictor of well-being when controlling for need satisfaction and frustration (median b = `r round(median(fittedNSModels$estimate), 3)`, median p value = `r round(median(fittedNSModels$p.value), 3)`). This suggests that gaming life fit may account for well-being above and beyond someone's level of fulfillment in life as a whole.
 
 ## Sensitivity Checks
 
@@ -951,33 +1003,133 @@ binaryFits <- map_df(
   select(predictor, outcome, everything())
 ```
 
-We performed various sensitivity checks to ensure the robustness of our findings (see supplementary materials for full detail). First, we explored potential non-linearity in the relationships between playtime and mental health by comparing a generalized additive model of well-being with and without a smooth term for playtime, and comparing AIC between these. Of the 48 possible models (4 well-being variables \* 12 playtime windows), just 1 of these (playtime in the previous 1 year and life satisfaction) showed a difference in AIC of more than 2, indicating that nearly all relationships were adequately captured by linear terms. Next, we reran the analyses using session durations as calculated by Nintendo, as opposed to the implied duration based on the start and end timestamps; Nintendo’s durations are shorter than the implied duration in approximately 10% of sessions due to internal methodology. Data show a similar pattern: no models showed a significant relationship between playtime and well-being at our specified alpha of .01. Next, we explored alternative models wherein playtime was separated into both a binary variable (1 if the player had any time logged in that period, 0 if not), and a continuous variable (how much a person played). Results were comparable; although three models indicated that among those who played in the previous 1-2 weeks, longer play is associated with higher affect and general mental well-being, the remaining 93 playtime variables were neither significant or nor within both equivalence bounds.
+```{r}
+#| label: sensitivity-latent-variables
+#| include: false
+
+modLVs <- ' # Latent variables
+            genWb =~ wemwbs_1 + wemwbs_2 + wemwbs_3 + wemwbs_4 + wemwbs_5 + wemwbs_6 + wemwbs_7 + wemwbs_8 + wemwbs_9 + wemwbs_10 + wemwbs_11 +                          wemwbs_12 + wemwbs_13 + wemwbs_14
+            depression =~ promis_1 + promis_2 + promis_3 + promis_4 + promis_5 + promis_6 + promis_7 + promis_8 '
+fitLVs <- cfa(modLVs, data = dat)
+summary(fitLVs, standardized = TRUE)
+
+datLVs <- dat |> 
+  filter(!is.na(wemwbs_1) & !is.na(promis_1)) |>
+  bind_cols(as.data.frame(lavPredict(fitLVs)))
+
+LVmodels <- expand.grid(
+  predictor = datLVs |> select(matches("playtime\\d")) |> names(),
+  outcome = c("genWb", "depression")
+) |>
+  mutate(formula = paste0(outcome, " ~ ", predictor, " + age + genderRC + eduLevel + employment"))
+
+fittedLVmodels <- map_df(
+  LVmodels$formula, ~ lm(as.formula(.x),
+    data = datLVs
+  ) |>
+    broom::tidy(conf.int = TRUE, conf.level = .99) |>
+    filter(grepl("play", term))
+) |>
+  mutate(
+    predictor = LVmodels$predictor,
+    outcome = LVmodels$outcome
+  ) |>
+  select(predictor, outcome, everything()) |> 
+  rename_all(~glue("lv_{.}")) |> 
+  bind_cols(fittedModels |> filter(outcome %in% c("meanWemwbs", "meanPromis")) |> rename_all(~glue("mean_{.}"))) |> 
+  mutate(
+    diff_est = lv_estimate - mean_estimate,
+    diff_p = lv_p.value - mean_p.value,
+    diff_sig = case_when(
+      lv_p.value < .01 & mean_p.value < .01 ~ "Both",
+      lv_p.value < .01 ~ "LV",
+      mean_p.value < .01 ~ "Mean",
+      TRUE ~ "Neither"
+    )
+  )
+
+fittedLVmodels |>
+  mutate(
+    model = paste0(lv_outcome, " ~ ", lv_predictor),
+    # predictor = fct_rev(fct_recode(predictor, !!!playtimeDict)),
+    lv_outcome = fct_recode(lv_outcome,
+      "Depressive Symptoms (Latent)" = "depression",
+      "General Mental Well-being (Latent)" = "genWb"
+    ),
+
+    # some hacky code to match up the time periods with their lubridate::period objects and then convert to numeric
+    # so we can plot on the log scale
+    window = map(sub("playtime", "", lv_term), ~ timeWindows[.]),
+    window = map_dbl(window, ~ as.numeric(.x[[1]], "hours")),
+    conf.high.90 = lv_estimate + 1.645 * lv_std.error,
+    conf.low.90 = lv_estimate - 1.645 * lv_std.error
+  ) |>
+  ggplot(aes(x = window, y = lv_estimate)) +
+  geom_ribbon(
+    aes(ymin = lv_conf.low, ymax = lv_conf.high),
+    group = 1,
+    alpha = .4,
+    fill = "darkgrey"
+  ) +
+  geom_ribbon(
+    aes(ymin = conf.low.90, ymax = conf.high.90),
+    group = 1,
+    alpha = .8,
+    fill = "darkgrey"
+  ) +
+  geom_line(
+    group = 1,
+    color = "darkgreen",
+    linewidth = 1,
+  ) +
+  geom_point(color = "darkgreen", size = 2) +
+  scale_x_log10(breaks = map_dbl(timeWindows, ~ as.numeric(.x[[1]], "hours")), labels = names(playtimeDict)) +
+  labs(
+    x = "Observation period for video game play",
+    y = "Playtime-outcome association\nin observation period"
+  ) +
+  theme_linedraw() +
+  theme(
+    # axis.title.y = element_text(angle = 0, vjust = .5),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(linewidth = .1),
+    axis.text.x = element_text(size = 8, angle = 30, hjust = 1),
+  ) +
+  geom_hline(yintercept = .06, linetype = "dashed", linewidth = .3, color = "black") +
+  geom_hline(yintercept = -.06, linetype = "dashed", linewidth = .3, color = "black") +
+  facet_wrap(~lv_outcome, scales = "free_y")
+
+```
+
+We performed various sensitivity checks to ensure the robustness of our findings, detailed in full in the supplementary materials. First, we explored potential non-linearity in the relationships between playtime and mental health by comparing a generalised additive model of well-being with and without a smooth term for playtime, and comparing AIC between these. Of the 48 possible models (4 well-being variables \* 12 playtime windows), just one of these (playtime in the previous one year and life satisfaction) showed a difference in AIC of more than two, indicating that nearly all relationships were adequately captured by linear terms. Next, we reran the analyses using session durations as calculated by Nintendo, as opposed to the implied duration based on the start and end timestamps; Nintendo’s durations are shorter than the implied duration in approximately 10% of sessions due to internal methodology. Data show a similar pattern: no models showed a significant relationship between playtime and well-being at our specified alpha of .01. Next, to address the fact that our sample was only minimally engaged with Nintendo games, we explored alternative models wherein playtime was separated into both a binary variable (1 if the player had any time logged in that period, 0 if not), and a continuous variable (how much a person played). Results were comparable; although three models indicated that among those who played in the previous 1-2 weeks, longer play is associated with higher affect and general mental well-being, the remaining 93 playtime variables were neither significant or nor within both equivalence bounds. Finally, we compared models using mean scores for multi-item measures (depression and general mental well-being) to alternatives fit using latent variable scores from a confirmatory factor analysis. Results again showed no meaningful changes; models using latent variable scores differed on average by `r round(mean(fittedLVmodels$diff_est), 3)` compared to models using mean scores.
 
 # Discussion
 
-Although we did not design our study to test the causal question most critical to stakeholders, our study is a concrete step in the right direction, having independently recruited a large sample of video game players [as opposed relying on recruitment through games companies themselves; e.g. @JohannesEtAl2021video], collected validated measures of well-being, joined these with objective behavioral telemetry and made minimal adjustments for age, gender, employment, and education. Using these methods, we did not find robust or consistent relationships between time spent playing and various mental well-being outcomes.
+Although we did not intend our study to test the causal question most critical to heated debates surrounding video game engagement and global health, our study is a concrete step towards long-repeated calls for greater transparency and robustness in games research, having independently recruited a large sample of video game players [as opposed relying on recruitment through games companies themselves; e.g. @JohannesEtAl2021video], collected validated measures of well-being, joined these with digital trace data and made minimal adjustments for age, gender, employment, and education. Using these methods, we did not uncover robust or consistent relationships between time spent playing and various mental well-being outcomes.
 
-Although not conclusive, our results point toward a pattern whereby platform-wide video game play time does not predict well-being to a meaningful degree. This trend, across a wide range of outcomes, timescales of play, and model specifications adds to a growing body of work that suggests that simple time spent playing games is unlikely to affect well-being for the average player. Said differently, the findings we report place the onus on those who assert that there is a meaningful relationship between playtime and well-being. It should be a priority to identify and concretely articulate which confounds might bias a true effect towards the null associations reported in this and other research using player telemetry [@JohannesEtAl2021video; @VuorreEtAl2022Time; @LarrieuEtAl2023How; @BallouEtAl2024Registered].
+Although not conclusive, our results point toward a pattern whereby platform-wide video game play time does not predict well-being to a meaningful degree. This trend, across a wide range of outcomes, timescales of play, and model specifications adds to a growing body of work that suggests that simple time spent playing games is unlikely to affect well-being for the average player. Said differently, the findings we report place the onus on those who assert that there is a meaningful relationship between playtime and well-being. It should be a priority to identify and concretely articulate which confounds might bias a true effect towards the null associations reported in this and other research using digital trace data [@JohannesEtAl2021video; @VuorreEtAl2022Time; @LarrieuEtAl2023How; @BallouEtAl2024Registered].
 
-To further elucidate this point, we conducted brief simulation tests to ascertain how strong such confounding might need to be (see Supplementary Materials). For example, if the true standardized effect of playtime on mental health was a moderate .2 SDs per additional hour of daily playtime, a confound C would need to be a very strong cause of both X ($beta = .5$) and Y ($beta = -.5$ ) to bias the true .2 effect to null. While we do not claim this is impossible, we do believe it unlikely. Approaching the topic along these lines---identifying confounds, testing the presence or absence of correlations for their sensitivity to potential confounds, and systematically identifying factors that do (not) cause playtime and well-being---can help us achieve more systematic progress [@BallouEtAl2024How]. This work can be bolstered by qualitative research aimed at more fully mapping the causal system and by substantive theory development with greater specificity in the aspects of media use expected to produce effects, the hypothesized causal relationships, boundary conditions, and so forth [@MagnussonEtAl2024Harmful; @Ballou2023Manifesto; @Coenen2023Lost; @EronenBringmann2021theory].
+To further elucidate this point, we conducted brief simulation tests to ascertain how strong such confounding might need to be (see Supplementary Materials). For example, if the true standardized effect of playtime on mental health was a moderate .2 SDs per additional hour of daily playtime, a confound C would need to be a very strong cause of both X ($beta = .5$) and Y ($beta = -.5$ ) to bias the true .2 effect to null. While we do not claim this is impossible, we do believe it unlikely. Approaching the topic along these lines---identifying confounds, testing the presence or absence of correlations for their sensitivity to potential confounds, and systematically identifying factors that do (not) cause playtime and well-being---can help us achieve more systematic progress [@BallouEtAl2024How].This work can be bolstered by qualitative research aimed at more fully mapping the causal system and by substantive theory development with greater specificity in the aspects of media use expected to produce effects, the hypothesized causal relationships, boundary conditions, and so forth [@MagnussonEtAl2024Harmful; @Ballou2023Manifesto; @Coenen2023Lost; @EronenBringmann2021theory].
+
+Given the growing number of studies that have failed to find meaningful relationships between playtime and wellbeing, the most informative such theories and models are likely to focus on the quality of play instead: the reasons why people play, the social contexts they play in, their in-game behavior and experiences, and so on. Fortunately, we have a wealth of theoretical 'raw material': previous research has proposed a wide variety of ways that aspects of gaming above and beyond time can affect people [see @BallouEtAl2024How for an overview of 13 such potential mechanisms]. To name but a few, players may be harmed by predatory monetization or lose control over their play---phenomena more common with high playtime, but possible with lower playtime as well [@StasekEtAl2024Disentangling]. So too may they benefit from the development of social connections, experiences of deeper appreciation or nostalgia [@DaneelsEtAl2023Deeper], and safe places to grapple with questions of identity [@GranicEtAl2020screen]. We encourage the field to develop and test these theories in a systematic way, using the same rigorous methods that we have endeavored to apply to the question of playtime and well-being.
 
 ## Who are "gamers"?
 
-The steady attrition throughout the stages of the research process from screening, to linking, to successful data retrieval highlights the challenges for participant recruitment in video games research. Despite a series of filtering steps wherein a majority of participants were filtered out due to not playing Switch games or being unwilling or unable to link data, our final sample remains only minimally engaged with Nintendo games—playing just `r 7*round(median(dat$playtime1yr, na.rm = TRUE), 1)` hours per week on average. As a result, the population here is very different than previous studies whereby players were recruited through targeted emails from games companies [@JohannesEtAl2021video; @LarrieuEtAl2023How] or social media forums for highly-engaged players [@BallouEtAl2024Registered].
+The steady attrition throughout the stages of the research process from screening, to linking, to successful data retrieval highlights the challenges for participant recruitment in video games research. Despite a series of filtering steps wherein a majority of participants were filtered out due to not playing Switch games or being unwilling or unable to link data, our final sample remains only minimally engaged with Nintendo games—playing just `r 7*round(median(dat$playtime1yr, na.rm = TRUE), 1)` hours per week on average. As a result, the population here is clearly different than previous studies recruiting participants with the help of games companies [@JohannesEtAl2021video; @LarrieuEtAl2023How] or through social media forums for highly-engaged players [@BallouEtAl2024Registered].
 
-As argued above, we believe this is a valuable group in its own right—people who rarely play video games may be particularly susceptible to their positive or negative effects on the occasions they do play. While the current study is unlikely to generalize to so-called "hardcore" players who play several hours per day or more and therefore may experience more accumulative effects, our findings align with previous studies of more highly engaged players and add a new subgroup of players to the body of work showing the absence of any meaningful relationship [@BallouEtAl2024Registered; @LarrieuEtAl2023How; @VuorreEtAl2022Time].
+As argued above, we believe this is an important group to study in its own right, complementing the substantial research attention paid to highly-engaged players [e.g., @StasekEtAl2024Disentangling]. Those who rarely play video games may be particularly susceptible to their positive or negative effects on the occasions they do play. Following the Basic Needs in Games model [@BallouDeterding2024Basic] and findings that casual players typically report lower autonomy, competence, and relatedness than hardcore players [@NeysEtAl2014exploring], we speculate that infrequent players may have a less accurate predictive model of how to approach and derive satisfaction from games than more seasoned players, making them more susceptible to both unexpected negative outcomes such as frustration when failing to overcome challenges, or toxicity from other players, as well as positive effects such as short-term escapism, learning, or social interaction. While the current study is unlikely to generalize to so-called "hardcore" players who play several hours per day or more and therefore may experience more accumulative effects, our findings align with previous studies of more highly engaged players and add a new subgroup of players to the body of work showing the absence of any meaningful relationship [@BallouEtAl2024Registered; @LarrieuEtAl2023How; @VuorreEtAl2022Time].
 
-As the field progresses, however, differences in the level of engagement pose major challenges for generalizability. Calls for representative samples need to specify the population of reference: should this be the general population (of whom many do not play games), people who play any games at all (of whom many do not play the games for which researchers have data access), people who play the particular game or platform of interest (of whom many may be only minimally engaged), or something else entirely? In the field's quest for more generalizable results, this will be a critical issue.
+As the field progresses, however, differences in the level of engagement pose major challenges for study sampling and generalisability. Calls for representative samples need to specify the population of reference: should this be the general population (of whom many do not play games), people who play any games at all (of whom many do not play the games for which researchers have data access), people who play the particular game or platform of interest (of whom many may be only minimally engaged), or something else entirely? In the field's quest for more generalizable results, this will be a critical issue.
 
 ## Timescales
 
-While we are quick to caution that this is a preliminary finding that should not be relied upon without further validation, our data provide some initial evidence that effects of raw playtime may be most likely to materialize and fade within a few hours---point estimates indicated that playtime was more strongly linked with greater well-being in the 1-2 hours prior to survey completion. This finding is compatible with various causal explanations: for example, players who recently played are more likely be in a period of leisure time, which would be expected to generate more positive feelings than in peers doing obligatory activities such as work. However, if researchers do expect to see positive effects of gaming, our data suggest that they may need to search for very local effects directly during and following a play session [e.g., @VuorreEtAl2024Affective].
+While we are quick to caution that this is a preliminary finding that should not be relied upon without further validation, our data provide some initial evidence that effects of raw playtime might materialize and fade within a few hours---point estimates indicated that playtime was more strongly linked with greater well-being in the 1-2 hours prior to survey completion. This finding is compatible with various causal explanations: for example, players who recently played are more likely be in a period of leisure time, which would be expected to generate more positive feelings than in peers doing obligatory activities such as work. However, if researchers do expect to see positive effects of gaming, our data suggest that they may need to search for highly proximal effects directly during and following a play session [e.g., @VuorreEtAl2024Affective].
 
-Should this finding be upheld, it would go a long way towards explaining previous null findings from studies that related well-being to playtime over timescales such as 2 weeks [@VuorreEtAl2022Time], 1 month [@SibillaEtAl2021Harmonious], 6 months [@WeinsteinEtAl2017prospective], and 1 year [@KowertEtAl2015Psychosocial]. For most players, it may be the case that gaming is a recovery activity that helps to manage day-to-day stresses and mood fluctuations, without necessarily having substantial long-term impacts. The majority of players have several options for activities in their environment that would have comparable effects on their well-being. Such activities are thus “exchangeable”, serving the same short-term goals without consequences for long-term adjustment. Studying relationships over the course of hours has to date been possible largely only in laboratory settings—rarely have researchers had access to session-level data of naturalistic behavior that they could link to momentary well-being.
+Should this finding be upheld, it would go a long way towards explaining the juxtaposition of previous null findings from studies that related well-being to playtime over timescales such as two weeks [@VuorreEtAl2022Time], one month [@SibillaEtAl2021Harmonious], six months [@WeinsteinEtAl2017prospective], and one year [@KowertEtAl2015Psychosocial]---alongside other studies showing small relationships over the course of a day [@Allen2020gaming; @Razum2023Daily]. For most players, it may be the case that gaming is a recovery activity that helps to manage day-to-day stresses and mood fluctuations, without necessarily having substantial long-term impacts. The majority of players have several options for activities in their environment that would have comparable effects on their well-being. Such activities are thus “exchangeable”, serving the same short-term goals without consequences for long-term adjustment. Studying relationships over the course of hours has to date been possible largely only in laboratory settings—rarely have researchers had access to session-level data of naturalistic behavior that they could link to momentary well-being.
 
 ## Life fit
 
-This study demonstrates the potential usefulness of life fit as a theoretical construct [@BallouDeterding2023Basic]. Given the accumulating evidence that playtime and well-being are not meaningfully related at the population level alongside incontrovertible evidence that some players benefit and some are harmed [@BallouEtAl2024How; @BallouEtAl2024How], the task for the field can be framed as a search for the most important moderators. Life fit—a player's self-assessment about the contribution of gaming to different aspects of their lives—stands as an effective starting point, letting researchers trust the lived experiences of players to guide them towards patterns of problematic or particularly beneficial play.
+This study demonstrates the potential usefulness of life fit as a theoretical construct [@BallouDeterding2024Basic]. Given the accumulating evidence that playtime and well-being are not meaningfully related at the population level alongside incontrovertible evidence that some players benefit and some are harmed [@BallouEtAl2024How], the task for the field can be framed as a search for the most important moderators. Life fit—a player's self-assessment about the contribution of gaming to different aspects of their lives—stands as an effective starting point, letting researchers trust the lived experiences of players to guide them towards patterns of problematic or particularly beneficial play.
 
 Using this measure, we found no evidence that life fit moderated the relationship between playtime and well-being, but we did find a direct correlation between the two. Notably, this relationship was an order of magnitude stronger than any estimates for playtime itself. Among several other possible explanations, this would fit a pattern of biased self-assessment: it is possible that players who are generally feeling poorly are more likely to appraise their gaming as harmful to their mental health, regardless of whether that mechanism actually takes place. This would align with some previous findings that more depressed people tend to overestimate their smartphone use due to a negative or guilt-laden appraisal process distinct from the media use itself [@SewallParry2021Role].
 
@@ -991,7 +1143,13 @@ In this same vein, although collaborations between academics and digital media p
 
 ## Limitations
 
-There are three limitations and constraints on generalizability the merit mention. First, the most pronounced limitation is that we cannot analyze telemetry generated when players engaged with third-party titles (i.e. games not published by Nintendo or its closely associated companies). As a result, our findings generalize only to similar Nintendo games (75% of which were rated for everyone or everyone over 10), and it is not possible to rule out the possibility that third-party games with different content or themes might show a different pattern of effects. Likewise, because we collaborated with Nintendo of America, our sample consisted only of adults living in the United States, a group that we found to be largely casually involved with first-party Nintendo games. Games are both global and played by those of all ages, so it is not clear the degree to which our findings do or do not generalize to younger players, those who play other games, or those who approach games from varied cultural and linguistic backgrounds. Finally, while we have longitudinal telemetry data, we were constrained here to a single cross-sectional wellbeing survey: we intend to expand upon these findings with more granular wellbeing measures in the future, and encourage the field to follow other media use disciplines and embrace daily diary and experience sampling methods [e.g., @SiebersEtAl2021Explaining; @AalbersEtAl2021Caught].
+There are four limitations and constraints on generalisability the merit mention. First, we could not analyse digital trace data generated when players engaged with third-party titles (i.e. games not published by Nintendo or its closely associated companies). As a result, our findings only hold for similar Nintendo games (75% of which were rated for everyone or everyone over 10), and it is not possible to rule out the possibility that third-party games with different content or themes might show a different pattern of effects.
+
+Second, we have access only to Nintendo Switch data, and not to other platforms or devices. While our sample is only casually engaged with Nintendo Switch games, we lack the information to know whether they are actually highly-engaged players---just only on other platforms. We know that participants use on average 2.8 platforms, but we do not know how much they play on each. This is a crucial limitation to be rectified in future research that either combines digital trace data from multiple platforms, or combines trace data with self-report to triangulate holistic play.
+
+Likewise, because we collaborated with Nintendo of America, our sample consisted only of adults living in the United States, a group that we found to be largely casually involved with first-party Nintendo games. Games are both global and played by those of all ages, so it is not clear the degree to which our findings do or do not apply to younger players, those who play other games, or those who approach games from different cultural and linguistic backgrounds.
+
+Finally, while we have longitudinal digital trace data data, our self-report survey was cross-sectional, and undertaken with a view towards future more informative designs such as daily diary and experience sampling methods [e.g., @SiebersEtAl2021Explaining; @AalbersEtAl2021Caught; @Allen2020gaming; @Razum2023Daily].
 
 ```{r}
 #| label: game-metadata
@@ -1034,11 +1192,13 @@ table(games$genres)
 
 ## Conclusion
 
-The idea that time spent playing is the key ingredient in how games impact well-being will be with us for some time. Although our study was not designed to test a causal link, it challenges the notion that simply playing more affects well-being, for better or for worse. The correlations we observed were mostly too small to practically matter. Moreover, we show that large confounding would be required to suppress a true causal effect to produce the null associations we observed. This is improbable but not impossible, and we believe our results lend weight to calls for scholars and health practitioners to embrace the gradual shift of focus towards quality, rather than quantity of video game play as the key factor for player health. If this can be done while simultaneously improving data quality and access, a coherent and evidence-based method for studying the complex relationships linking video game play and well-being will be possible.
+The idea that time spent playing is the key ingredient in how games impact well-being will be with us for some time. Although our study was designed to test an association rather than a causal link, it challenges the notion that simply playing more affects well-being, for better or for worse. The correlations we observed were mostly too small to practically matter. Moreover, we show that profound confounding would be required to suppress a true causal effect to account for the null associations we report. This is improbable but not impossible, and we believe our results lend weight to calls for scholars and health practitioners to embrace the gradual shift towards focusing on the quality, rather than quantity of video game play as the key factor for player health---in the first instance, this might be as simple as asking players how they feel gaming fits into and differentially affects other aspects of their life such as work/school, sleep, emotion regulation, and so on. This can be done in the context of self-report questionnaires, qualitative research, diagnostic interviews, and conversations between players and loved ones. To parlay this feedback from players into more systematic theory development, we encourage researchers to familiarize themselves with the breadth of proposed mechanisms through which different patterns—rather than hours—of gaming can affect people [e.g., @BallouEtAl2024How].
+
+By advancing generalizable accounts of how the quality of play affects well-being and simultaneously improving data quality and access, the field stands to make major strides towards our goal of not just understanding the complex relationships between video game play and well-being, but providing coherent and evidence-based solutions to improve players' lives.
 
 # Contributions
 
-Author roles were classified using the Contributor Role Taxonomy (CRediT;https://credit.niso.org/) as follows: Nick Ballou: conceptualization, data curation, methodology, formal analysis, writing; Matti Vuorre: methodology, funding acquisition, formal analysis, editing; Thomas Hakman: data curation, validation, editing; Kristoffer Magnusson: methodology, editing; Andrew K Przybylski: conceptualization,funding acquisition, project administration, editing
+Author roles were classified using the Contributor Role Taxonomy (CRediT;https://credit.niso.org/) as follows: Nick Ballou: conceptualization, data curation, methodology, formal analysis, writing; Matti Vuorre: methodology, funding acquisition, formal analysis, editing; Thomas Hakman: data curation, validation, editing; Kristoffer Magnusson: methodology, editing; Andrew K Przybylski: conceptualization, funding acquisition, project administration, editing
 
 # References
 

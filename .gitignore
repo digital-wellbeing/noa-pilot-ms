@@ -6,6 +6,9 @@
 .DS_Store
 ms.pdf
 ms.docx
+ms-old.qmd
+ms-old.docx
+ms-old.pdf
 rominaTesting.R
 
 /.quarto/
