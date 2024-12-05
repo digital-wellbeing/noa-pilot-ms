@@ -43,6 +43,12 @@ local processfloat = function(float)
     local beforenote = ""
     if manuscriptmode then
       beforenote = "\\vspace{-20pt}\n"
+      if float.attributes["beforenotespace"] then
+        
+        beforenote = "\\vspace{" .. float.attributes["beforenotespace"] .. "}\n"
+      end
+      
+      
     end
     if journalmode then
       -- No spacing in before note in journalmode
@@ -82,6 +88,10 @@ local processfloat = function(float)
       local aftercaption = ""
       if manuscriptmode then
         aftercaption = "\n\\vspace{-20pt}"
+        if float.attributes["after-caption-space"] then
+          aftercaption = "\\vspace{" .. float.attributes["after-caption-space"] .. "}\n"
+        end
+        
       end
       
       -- Make caption

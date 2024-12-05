@@ -14,4 +14,4 @@ rominaTesting.R
 /.quarto/
 /.html/
 *_files
-*.docx
+/*.docx
