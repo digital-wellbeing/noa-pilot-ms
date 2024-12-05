@@ -1,4 +1,4 @@
-# Perceived value of video games, but not hours played, predicts mental well-being in adult Nintendo players 
+# Perceived value of video games, but not hours played, predicts mental well-being in adult Nintendo players
 
 This repository contains the data, materials, and code for our manuscript "Perceived value of video games, but not hours played, predicts mental well-being in adult Nintendo players".
 
@@ -15,7 +15,7 @@ Authors:
 
 ## Materials and Questionnaire Items
 
-The codebook describing all datatables and questionnaire items can be found in `materials/codebook.xlsx`. 
+The codebook describing all datatables and questionnaire items can be found in `materials/codebook.xlsx`.
 
 ## Data
 
@@ -25,22 +25,20 @@ Data itself can be found in `data/`, in compressed `.csv.gz` files. In total, th
 - **Self-report data** from surveys (`survey.csv.gz`)
 - V**ideo game behavior data** in the form of Nintendo Switch session records (`telemetry.csv.gz`)
 - **Cognitive task data** (`osf/`)
-- **Game Metadata**, scraped from [IGDB.org](IGDB.org) so as to understand feature-level characteristics of the games people played. 
+- **Game Metadata**, scraped from [IGDB.org](IGDB.org) so as to understand feature-level characteristics of the games people played.
 
 
 
 ## Reproduce
 
-The analysis code is written in R. The source code of the manuscript (including all data wrangling, analysis, and an APA-like template that can be rendered as a pdf or docx file) is in `ms.qmd`. To reproduce:
+The analysis code is written in R. The source code of the manuscript (including all data wrangling, analysis, and an APA-like template that can be rendered as a pdf or docx file) is in `ms.qmd`. To reproduce, run `make` or manually:
 
 1. Open the noa-pilot-ms.Rproj project.
-
 2. Restore the R environment with `renv::restore()`.
-- Renv is used to manage the package dependencies for this project. You should be automatically prompted to install the necessary packages on your system upon opening the project. 
-
+- Renv is used to manage the package dependencies for this project. You should be automatically prompted to install the necessary packages on your system upon opening the project.
 3. Run the analysis and manuscript in `ms.qmd`.
 
-Note that some computations can take a long time, depending on computer performance etc.
+Note that some computations can take a long time, depending on computer performance etc. You will also need to have a working and compatible LaTeX installation.
 
 ## Contribute
 
