@@ -1,0 +1,4 @@
+project:
+  render:
+    - ms.qmd
+    - confoundingSimulations.qmd
