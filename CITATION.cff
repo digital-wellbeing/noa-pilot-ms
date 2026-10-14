@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+title: |
+  Code and data supplement to "Perceived value of video games, but not hours played, predicts mental well-being in casual adult nintendo players"
+version: 1.0.1
+license: CC-BY-4.0
+type: software
+abstract: |
+  Studies on video games and well-being often rely on self-report measures or data from a single game. Here, we study how 703 casually engaged US adults' time spent playing for over 140 000 h across 150 Nintendo Switch games relates to their life satisfaction, affect, depressive symptoms and general mental well-being. We replicate previous findings that playtime over the past two weeks does not predict well-being, and extend these findings to a wider range of timescales (1 h to 1 year). Equivalence tests were inconclusive, and thus we do not find evidence of absence, but results suggest that practically meaningful effects lasting more than 2 h after gameplay are unlikely. Our non-causal findings suggest substantial confounding would be needed to shift a meaningful true effect to the observed null. Although playtime was not related to well-being, players' assessments of the value of game time—so-called gaming life fit—were. Results emphasize the importance of defining the gaming population of interest, collecting data from more than one game, and focusing on how players integrate gaming into their lives rather than the amount of time spent.
+message: |
+  Please cite as indicated.
+authors:
+  - family-names: Ballou
+    given-names: Nick
+    orcid: https://orcid.org/0000-0003-4126-0696
+    affiliation: University of Oxford
+  - family-names: Vuorre
+    given-names: Matti
+    orcid: https://orcid.org/0000-0001-5052-066X
+    affiliation: Tilburg University
+  - family-names: Hakman
+    given-names: Thomas
+    orcid: https://orcid.org/0009-0009-8292-2482
+    affiliation: University of Oxford
+  - family-names: Magnusson
+    given-names: Kristoffer
+    orcid: https://orcid.org/0000-0003-0713-0556
+    affiliation: Karolinska Institutet
+  - family-names: Przybylski
+    given-names: Andrew
+    orcid: https://orcid.org/0000-0001-5547-2185
+    affiliation: University of Oxford
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.15063291
+keywords:
+  - psychology
